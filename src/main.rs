@@ -1,6 +1,6 @@
 use chess_engine::board_rep::bitboard;
 use chess_engine::board_rep::board::*;
-use chess_engine::debug;
+use chess_engine::board_rep::debug;
 
 fn main() {
     debug::print_board(&INITIAL_BOARD);
