@@ -10,7 +10,7 @@ fn main() {
     debug::print_bitboard(board);
     println!();
     let mut board_mut: bitboard::BitBoard = board;
-    bitboard::flip_a1h8(&mut board_mut);
+    board_mut = bitboard::south_fill(board);
     debug::print_bitboard(board_mut);
     //println!();
     //debug::print_bitboard(&bitboard::rotate90cw(&INITIAL_BOARD.pw));

@@ -163,6 +163,21 @@ pub fn bitscan_reverse(mut board: BitBoard) -> u64 {
    board |= board >> 32;
    return BITSCAN_INDEX[((board.overflowing_mul(BITSCAN_DEBRUIJIN).0) >> 58) as usize];
 }
+
+pub fn north_fill(mut board: BitBoard) -> BitBoard {
+   board |= board <<  8;
+   board |= board << 16;
+   board |= board << 32;
+   return board;
+}
+
+pub fn south_fill(mut board: BitBoard) -> BitBoard {
+   board |= board >>  8;
+   board |= board >> 16;
+   board |= board >> 32;
+   return board;
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
