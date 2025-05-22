@@ -122,14 +122,47 @@ pub fn popcount_swar(mut board: BitBoard) -> u64{
 /** Fast algo for sparsely populated bitboards
  */
 pub fn popcount_loop(mut board: BitBoard) -> u64 {
-   let mut count: u64 = 0;
-   while board != 0 {
-       count += 1;
-       board &= board - 1; // reset LS1B
-   }
-   return count;
+    let mut count: u64 = 0;
+    while board != 0 {
+        count += 1;
+        board &= board - 1; // reset LS1B
+    }
+    return count;
 }
 
+const BITSCAN_INDEX: [u64; 64] = [
+    0, 47,  1, 56, 48, 27,  2, 60,
+    57, 49, 41, 37, 28, 16,  3, 61,
+    54, 58, 35, 52, 50, 42, 21, 44,
+    38, 32, 29, 23, 17, 11,  4, 62,
+    46, 55, 26, 59, 40, 36, 15, 53,
+    34, 51, 20, 43, 31, 22, 10, 45,
+    25, 39, 14, 33, 19, 30,  9, 24,
+    13, 18,  8, 12,  7,  6,  5, 63
+];
+const BITSCAN_DEBRUIJIN: u64 = 0x03f79d71b4cb0a89;
+
+/** Returns the index of the Least significant 1 bit of the bitboard
+ * https://www.chessprogramming.org/BitScan 
+ */
+pub fn bitscan_forward(board: BitBoard) -> u64 {
+    assert!(board != 0, "Bitscan forward recieved a board 0");
+    return BITSCAN_INDEX[(((board ^ (board-1)).overflowing_mul(BITSCAN_DEBRUIJIN).0) >> 58) as usize];
+}
+
+/** Returns the index of the Most significant 1 bit of the bitboard
+ * https://www.chessprogramming.org/BitScan 
+ */
+pub fn bitscan_reverse(mut board: BitBoard) -> u64 {
+   assert!(board != 0, "Bitscan reverse recieved a board 0");
+   board |= board >> 1; 
+   board |= board >> 2;
+   board |= board >> 4;
+   board |= board >> 8;
+   board |= board >> 16;
+   board |= board >> 32;
+   return BITSCAN_INDEX[((board.overflowing_mul(BITSCAN_DEBRUIJIN).0) >> 58) as usize];
+}
 #[cfg(test)]
 mod test {
     use super::*;
@@ -213,5 +246,16 @@ mod test {
         board = SQUARE_LIGHT;
         assert_eq!(popcount_loop(board), 32);
         assert_eq!(popcount_swar(board), 32);
+    }
+
+    #[test]
+    fn test_bitscan(){
+        let mut board: BitBoard = (0b1101 << 35) | (1 << 46);
+        assert_eq!(bitscan_forward(board), 35);
+        assert_eq!(bitscan_reverse(board), 46);
+
+        board = 1;
+        assert_eq!(bitscan_forward(board), 0);
+        assert_eq!(bitscan_reverse(board), 0);
     }
 }
