@@ -1,5 +1,6 @@
-use chess_engine::{bitboard::INITIAL_BOARD, debug};
-use chess_engine::bitboard;
+use chess_engine::board_rep::bitboard;
+use chess_engine::board_rep::board::*;
+use chess_engine::debug;
 
 fn main() {
     debug::print_board(&INITIAL_BOARD);
@@ -8,8 +9,8 @@ fn main() {
     println!();
     debug::print_bitboard(&board);
     println!();
-    let mut board_mut = board;
-    bitboard::flip_anti_diag(&mut board_mut);
+    let mut board_mut: bitboard::BitBoard = board;
+    bitboard::flip_a1h8(&mut board_mut);
     debug::print_bitboard(&board_mut);
     //println!();
     //debug::print_bitboard(&bitboard::rotate90cw(&INITIAL_BOARD.pw));

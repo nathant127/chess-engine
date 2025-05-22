@@ -17,37 +17,6 @@ pub enum Square {
 
 pub type BitBoard = u64;
 
-pub struct Board {
-    pub pw: BitBoard,
-    pub rw: BitBoard,
-    pub nw: BitBoard,
-    pub bw: BitBoard,
-    pub qw: BitBoard,
-    pub kw: BitBoard,
-    pub pb: BitBoard,
-    pub rb: BitBoard,
-    pub nb: BitBoard,
-    pub bb: BitBoard,
-    pub qb: BitBoard,
-    pub kb: BitBoard
-}
-
-pub const INITIAL_BOARD: Board = Board {
-    pw: 0x000000000000FF00,
-    rw: 0x0000000000000081,
-    nw: 0x0000000000000042,
-    bw: 0x0000000000000024,
-    qw: 0x0000000000000010,
-    kw: 0x0000000000000008,
-
-    pb: 0x00FF000000000000,
-    rb: 0x8100000000000000,
-    nb: 0x4200000000000000,
-    bb: 0x2400000000000000,
-    qb: 0x0800000000000000,
-    kb: 0x1000000000000000
-};
-
 pub const FILE_A: BitBoard = 0x0101010101010101;
 pub const FILE_H: BitBoard = 0x8080808080808080;
 pub const RANK_1: BitBoard = 0x00000000000000FF;
@@ -69,15 +38,11 @@ pub fn file(index: &u64) -> u64{
 pub fn rank(index: &u64) -> u64{
     return index >> 3; // Equivalent to dev/8
 }
-#[inline]
-pub fn all(state: &Board) -> BitBoard{
-    return state.pw | state.rw | state.nw | state.bw | state.qw | state.kw | state.pb | state.rb | state.nb | state.bb | state.qb | state.kb;
-}
+
 #[inline]
 pub fn row(board: &BitBoard, row: u64) -> u64{
     return board >> (row*8) & RANK_1;
 }
-
 // Flipping and rotating algorithms from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Rotationby90degreesClockwise 
 pub fn flip_v(board: &mut BitBoard){
     const K1: u64 = 0x00FF00FF00FF00FF;
@@ -94,7 +59,8 @@ pub fn flip_h(board: &mut BitBoard){
     *board = ((*board >> 2) & K2) +  4*(*board & K2);
     *board = ((*board >> 4) & K4) + 16*(*board & K4);
 }
-pub fn flip_diag(board: &mut BitBoard){
+// Flip diagonal
+pub fn flip_h1a8(board: &mut BitBoard){
     const K1: u64 = 0x5500550055005500;
     const K2: u64 = 0x3333000033330000;
     const K4: u64 = 0x0f0f0f0f00000000;
@@ -106,7 +72,8 @@ pub fn flip_diag(board: &mut BitBoard){
     t  = K1 & (*board ^ (*board <<  7));
     *board ^=       t ^ (t >>  7) ;
 }
-pub fn flip_anti_diag(board: &mut BitBoard){
+// Flip anti diagonal
+pub fn flip_a1h8(board: &mut BitBoard){
     const K1: u64 = 0xaa00aa00aa00aa00;
     const K2: u64 = 0xcccc0000cccc0000;
     const K4: u64 = 0xf0f0f0f00f0f0f0f;
@@ -120,7 +87,19 @@ pub fn flip_anti_diag(board: &mut BitBoard){
 }
 
 #[inline]
-pub fn rotate90cw(board: &BitBoard) -> BitBoard{
-    let board_r = (((board >> 3) | (board << 3)) & 63) ^ 56;
-    return ((board_r.overflowing_mul(0x20800000).0) >> 26) ^ 56; // unsigned 32-bit shift
+pub fn rotate90(board: &mut BitBoard){
+    flip_a1h8(board);
+    flip_v(board);
+}
+
+// Equivalent to flip vertical -> flip horizontal
+#[inline]
+pub fn rotate180(board: &mut BitBoard){
+    flip_v(board);
+    flip_h(board);
+}
+#[inline]
+pub fn rotate270(board: &mut BitBoard){
+    flip_v(board);
+    flip_a1h8(board);
 }
