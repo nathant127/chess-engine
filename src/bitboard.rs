@@ -74,6 +74,53 @@ pub fn all(state: &Board) -> BitBoard{
     return state.pw | state.rw | state.nw | state.bw | state.qw | state.kw | state.pb | state.rb | state.nb | state.bb | state.qb | state.kb;
 }
 #[inline]
-pub fn row(board: &BitBoard, row: u64) -> u8{
-    return (board >> row*8) as u8;
+pub fn row(board: &BitBoard, row: u64) -> u64{
+    return board >> (row*8) & RANK_1;
+}
+
+// Flipping and rotating algorithms from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Rotationby90degreesClockwise 
+pub fn flip_v(board: &mut BitBoard){
+    const K1: u64 = 0x00FF00FF00FF00FF;
+    const K2: u64 = 0x0000FFFF0000FFFF;
+    *board = ((*board >>  8) & K1) | ((*board & K1) <<  8);
+    *board = ((*board >> 16) & K2) | ((*board & K2) << 16);
+    *board = ( *board >> 32)       | ( *board       << 32);
+}
+pub fn flip_h(board: &mut BitBoard){
+    const K1: u64 = 0x5555555555555555;
+    const K2: u64 = 0x3333333333333333;
+    const K4: u64 = 0x0f0f0f0f0f0f0f0f;
+    *board = ((*board >> 1) & K1) +  2*(*board & K1);
+    *board = ((*board >> 2) & K2) +  4*(*board & K2);
+    *board = ((*board >> 4) & K4) + 16*(*board & K4);
+}
+pub fn flip_diag(board: &mut BitBoard){
+    const K1: u64 = 0x5500550055005500;
+    const K2: u64 = 0x3333000033330000;
+    const K4: u64 = 0x0f0f0f0f00000000;
+    let mut t: u64;
+    t  = K4 & (*board ^ (*board << 28));
+    *board ^=       t ^ (t >> 28) ;
+    t  = K2 & (*board ^ (*board << 14));
+    *board ^=       t ^ (t >> 14) ;
+    t  = K1 & (*board ^ (*board <<  7));
+    *board ^=       t ^ (t >>  7) ;
+}
+pub fn flip_anti_diag(board: &mut BitBoard){
+    const K1: u64 = 0xaa00aa00aa00aa00;
+    const K2: u64 = 0xcccc0000cccc0000;
+    const K4: u64 = 0xf0f0f0f00f0f0f0f;
+    let mut t: u64;
+    t  =       *board ^ (*board << 36) ;
+    *board ^= K4 & (t ^ (*board >> 36));
+    t  = K2 & (*board ^ (*board << 18));
+    *board ^=       t ^ (t >> 18) ;
+    t  = K1 & (*board ^ (*board <<  9));
+    *board ^=       t ^ (t >>  9) ;
+}
+
+#[inline]
+pub fn rotate90cw(board: &BitBoard) -> BitBoard{
+    let board_r = (((board >> 3) | (board << 3)) & 63) ^ 56;
+    return ((board_r.overflowing_mul(0x20800000).0) >> 26) ^ 56; // unsigned 32-bit shift
 }
