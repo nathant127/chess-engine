@@ -106,6 +106,30 @@ pub fn rotate270(board: &mut BitBoard){
     flip_a1h8(board);
 }
 
+/** Constant time version of popcount, should be used for densely populated bitboards
+*/
+pub fn popcount_swar(mut board: BitBoard) -> u64{
+    const K1: u64 = 0x5555555555555555; /*  -1/3   */
+    const K2: u64 = 0x3333333333333333; /*  -1/5   */
+    const K4: u64 = 0x0f0f0f0f0f0f0f0f; /*  -1/17  */
+    const KF: u64 = 0x0101010101010101; /*  -1/255 */
+    board =  board       - ((board >> 1)  & K1);
+    board = (board & K2) + ((board >> 2)  & K2);
+    board = (board       +  (board >> 4)) & K4 ;
+    board = (board.overflowing_mul(KF).0) >> 56;
+    return board;
+}
+/** Fast algo for sparsely populated bitboards
+ */
+pub fn popcount_loop(mut board: BitBoard) -> u64 {
+   let mut count: u64 = 0;
+   while board != 0 {
+       count += 1;
+       board &= board - 1; // reset LS1B
+   }
+   return count;
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -152,10 +176,10 @@ mod test {
     #[test]
     fn test_rotate(){
         let board_start: BitBoard = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3);
+
         let mut board: BitBoard = board_start;
         rotate90(&mut board);
         assert_eq!(board, (1 << 56) | (1<<48) | (1<<40) | (1<<32)); // Equal to bits 32, 40, 48, 56
-
         rotate270(&mut board);
         assert_eq!(board, board_start); // Rotate back to start
 
@@ -170,5 +194,24 @@ mod test {
         assert_eq!(board, (1<<31)|(1<<23)|(1<<15)|(1<<7)); // Bits 31 23 15 7
         rotate90(&mut board);
         assert_eq!(board, board_start);
+    }
+
+    #[test]
+    fn test_popcount(){
+        let mut board: BitBoard = (1 << 0) | (3 << 32) | (1 << 27) | (1 << 63); // Count should be 5
+        assert_eq!(popcount_loop(board), 5);
+        assert_eq!(popcount_swar(board), 5);
+        
+        board = 0;
+        assert_eq!(popcount_loop(board), 0);
+        assert_eq!(popcount_swar(board), 0);
+
+        board = u64::MAX;
+        assert_eq!(popcount_loop(board), 64);
+        assert_eq!(popcount_swar(board), 64);
+
+        board = SQUARE_LIGHT;
+        assert_eq!(popcount_loop(board), 32);
+        assert_eq!(popcount_swar(board), 32);
     }
 }
