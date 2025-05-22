@@ -4,6 +4,7 @@
 // a2 -> bit 8
 // h8 -> bit 63
 
+#[repr(u64)]
 pub enum Square {
     A1, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,
@@ -32,11 +33,12 @@ pub fn index(rank: &u64, file: &u64) -> u64{
 }
 #[inline]
 pub fn file(index: &u64) -> u64{
-    return index & 7;  // Equivalent to mod 8
+    return index & 7; // Equivalent to mod 8
+
 }
 #[inline]
 pub fn rank(index: &u64) -> u64{
-    return index >> 3; // Equivalent to dev/8
+    return index >> 3;  // Equivalent to div/8
 }
 
 #[inline]
@@ -60,7 +62,7 @@ pub fn flip_h(board: &mut BitBoard){
     *board = ((*board >> 4) & K4) + 16*(*board & K4);
 }
 // Flip diagonal
-pub fn flip_h1a8(board: &mut BitBoard){
+pub fn flip_a1h8(board: &mut BitBoard){
     const K1: u64 = 0x5500550055005500;
     const K2: u64 = 0x3333000033330000;
     const K4: u64 = 0x0f0f0f0f00000000;
@@ -73,7 +75,7 @@ pub fn flip_h1a8(board: &mut BitBoard){
     *board ^=       t ^ (t >>  7) ;
 }
 // Flip anti diagonal
-pub fn flip_a1h8(board: &mut BitBoard){
+pub fn flip_a8h1(board: &mut BitBoard){
     const K1: u64 = 0xaa00aa00aa00aa00;
     const K2: u64 = 0xcccc0000cccc0000;
     const K4: u64 = 0xf0f0f0f00f0f0f0f;
@@ -102,4 +104,71 @@ pub fn rotate180(board: &mut BitBoard){
 pub fn rotate270(board: &mut BitBoard){
     flip_v(board);
     flip_a1h8(board);
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_index(){
+        let mut square: u64 = Square::A1 as u64; 
+        assert_eq!(square, 0);
+        assert_eq!(rank(&square), 0);
+        assert_eq!(file(&square), 0);
+        assert_eq!(index(&0,&0), square);
+        
+        square = Square::A7 as u64;
+        assert_eq!(square, 48);
+        assert_eq!(rank(&square), 6);
+        assert_eq!(file(&square), 0);
+        assert_eq!(index(&6,&0), square);
+
+        square = Square::E3 as u64;
+        assert_eq!(square, 20);
+        assert_eq!(rank(&square), 2);
+        assert_eq!(file(&square), 4);
+        assert_eq!(index(&2,&4), square);
+    }
+    #[test]
+    fn test_flip(){
+        let mut board: BitBoard = RANK_1;
+        flip_v(&mut board);
+        assert_eq!(board, RANK_8);
+
+        board = FILE_A;
+        flip_h(&mut board);
+        assert_eq!(board, FILE_H);
+
+        board = RANK_1;
+        flip_a1h8(&mut board);
+        assert_eq!(board, FILE_A);
+
+        board = RANK_1;
+        flip_a8h1(&mut board);
+        assert_eq!(board, FILE_H);
+    }
+
+    #[test]
+    fn test_rotate(){
+        let board_start: BitBoard = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3);
+        let mut board: BitBoard = board_start;
+        rotate90(&mut board);
+        assert_eq!(board, (1 << 56) | (1<<48) | (1<<40) | (1<<32)); // Equal to bits 32, 40, 48, 56
+
+        rotate270(&mut board);
+        assert_eq!(board, board_start); // Rotate back to start
+
+        board = board_start;
+        rotate180(&mut board);
+        assert_eq!(board, (0xF << 60)); // Should be bits 60-63
+        rotate180(&mut board);
+        assert_eq!(board, board_start);
+
+        board = board_start;
+        rotate270(&mut board);
+        assert_eq!(board, (1<<31)|(1<<23)|(1<<15)|(1<<7)); // Bits 31 23 15 7
+        rotate90(&mut board);
+        assert_eq!(board, board_start);
+    }
 }

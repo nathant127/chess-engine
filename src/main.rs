@@ -7,11 +7,11 @@ fn main() {
 
     let board: u64 = INITIAL_BOARD.pw;
     println!();
-    debug::print_bitboard(&board);
+    debug::print_bitboard(board);
     println!();
     let mut board_mut: bitboard::BitBoard = board;
     bitboard::flip_a1h8(&mut board_mut);
-    debug::print_bitboard(&board_mut);
+    debug::print_bitboard(board_mut);
     //println!();
     //debug::print_bitboard(&bitboard::rotate90cw(&INITIAL_BOARD.pw));
 }
