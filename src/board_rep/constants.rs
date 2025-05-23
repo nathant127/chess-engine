@@ -58,6 +58,7 @@ pub const BITSCAN_DEBRUIJIN: u64 = 0x03f79d71b4cb0a89;
 pub const WHITE_PAWN_ATTACKS: [u64; 64] = init_wpawn_attacks();
 pub const BLACK_PAWN_ATTACKS: [u64; 64] = init_bpawn_attacks();
 pub const KNIGHT_TARGETS: [u64; 64] = init_knight_targets();
+pub const KING_TARGETS: [u64; 64] = init_king_targets();
 
 const fn init_wpawn_attacks() -> [u64; 64] {
     let mut arr: [u64; 64] = [0; 64];
@@ -114,6 +115,31 @@ const fn init_knight_targets() -> [u64; 64] {
 
         shifted = shift_west(pos);
         arr[i] |= shift_southwest(shifted) | shift_northwest(shifted);
+
+        i += 1;
+    }
+    return arr;
+}
+
+const fn init_king_targets() -> [u64; 64] {
+    let mut arr: [u64; 64] = [0; 64];
+
+    let mut i = 0;
+    while i < arr.len() {
+        let mut pos: u64 = 1 << i;
+        arr[i] = shift_east(pos) | shift_west(pos);
+        pos |= arr[i];
+        arr[i] |= shift_north(pos) | shift_south(pos);
+        i += 1;
+    }
+    return arr;
+}
+
+const fn init_temp() -> [u64; 64] {
+    let mut arr: [u64; 64] = [0; 64];
+
+    let mut i = 0;
+    while i < arr.len() {
 
         i += 1;
     }
