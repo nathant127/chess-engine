@@ -21,6 +21,8 @@ pub type BitBoard = u64;
 pub const FILE_A: BitBoard = 0x0101010101010101;
 pub const FILE_H: BitBoard = 0x8080808080808080;
 pub const RANK_1: BitBoard = 0x00000000000000FF;
+pub const RANK_4: BitBoard = RANK_1 << (8*3);
+pub const RANK_5: BitBoard = RANK_1 << (8*4);
 pub const RANK_8: BitBoard = 0xFF00000000000000;
 pub const DIAG_A1_H8: BitBoard = 0x8040201008040201;
 pub const DIAG_H1_A8: BitBoard = 0x0102040810204080;
@@ -28,16 +30,16 @@ pub const SQUARE_LIGHT: BitBoard = 0x55AA55AA55AA55AA;
 pub const SQUARE_DARK: BitBoard = 0xAA55AA55AA55AA55;
 
 #[inline]
-pub fn index(rank: &u64, file: &u64) -> u64{
+pub const fn index(rank: u64, file: u64) -> u64{
     return 8*rank + file; // LSF mapping
 }
 #[inline]
-pub fn file(index: &u64) -> u64{
+pub const fn file(index: u64) -> u64{
     return index & 7; // Equivalent to mod 8
 
 }
 #[inline]
-pub fn rank(index: &u64) -> u64{
+pub const fn rank(index: u64) -> u64{
     return index >> 3;  // Equivalent to div/8
 }
 
@@ -46,14 +48,14 @@ pub fn row(board: &BitBoard, row: u64) -> u64{
     return board >> (row*8) & RANK_1;
 }
 // Flipping and rotating algorithms from https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating#Rotationby90degreesClockwise 
-pub fn flip_v(board: &mut BitBoard){
+pub const fn flip_v(board: &mut BitBoard){
     const K1: u64 = 0x00FF00FF00FF00FF;
     const K2: u64 = 0x0000FFFF0000FFFF;
     *board = ((*board >>  8) & K1) | ((*board & K1) <<  8);
     *board = ((*board >> 16) & K2) | ((*board & K2) << 16);
     *board = ( *board >> 32)       | ( *board       << 32);
 }
-pub fn flip_h(board: &mut BitBoard){
+pub const fn flip_h(board: &mut BitBoard){
     const K1: u64 = 0x5555555555555555;
     const K2: u64 = 0x3333333333333333;
     const K4: u64 = 0x0f0f0f0f0f0f0f0f;
@@ -62,7 +64,7 @@ pub fn flip_h(board: &mut BitBoard){
     *board = ((*board >> 4) & K4) + 16*(*board & K4);
 }
 // Flip diagonal
-pub fn flip_a1h8(board: &mut BitBoard){
+pub const fn flip_a1h8(board: &mut BitBoard){
     const K1: u64 = 0x5500550055005500;
     const K2: u64 = 0x3333000033330000;
     const K4: u64 = 0x0f0f0f0f00000000;
@@ -75,7 +77,7 @@ pub fn flip_a1h8(board: &mut BitBoard){
     *board ^=       t ^ (t >>  7) ;
 }
 // Flip anti diagonal
-pub fn flip_a8h1(board: &mut BitBoard){
+pub const fn flip_a8h1(board: &mut BitBoard){
     const K1: u64 = 0xaa00aa00aa00aa00;
     const K2: u64 = 0xcccc0000cccc0000;
     const K4: u64 = 0xf0f0f0f00f0f0f0f;
@@ -89,19 +91,19 @@ pub fn flip_a8h1(board: &mut BitBoard){
 }
 
 #[inline]
-pub fn rotate90(board: &mut BitBoard){
+pub const fn rotate90(board: &mut BitBoard){
     flip_a1h8(board);
     flip_v(board);
 }
 
 // Equivalent to flip vertical -> flip horizontal
 #[inline]
-pub fn rotate180(board: &mut BitBoard){
+pub const fn rotate180(board: &mut BitBoard){
     flip_v(board);
     flip_h(board);
 }
 #[inline]
-pub fn rotate270(board: &mut BitBoard){
+pub const fn rotate270(board: &mut BitBoard){
     flip_v(board);
     flip_a1h8(board);
 }
@@ -178,6 +180,15 @@ pub fn south_fill(mut board: BitBoard) -> BitBoard {
    return board;
 }
 
+#[inline]
+pub fn north_one(board: BitBoard) -> BitBoard {
+    return board << 8;
+}
+#[inline]
+pub fn south_one(board: BitBoard) -> BitBoard{
+    return board >> 8;
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -186,21 +197,21 @@ mod test {
     fn test_index(){
         let mut square: u64 = Square::A1 as u64; 
         assert_eq!(square, 0);
-        assert_eq!(rank(&square), 0);
-        assert_eq!(file(&square), 0);
-        assert_eq!(index(&0,&0), square);
+        assert_eq!(rank(square), 0);
+        assert_eq!(file(square), 0);
+        assert_eq!(index(0,0), square);
         
         square = Square::A7 as u64;
         assert_eq!(square, 48);
-        assert_eq!(rank(&square), 6);
-        assert_eq!(file(&square), 0);
-        assert_eq!(index(&6,&0), square);
+        assert_eq!(rank(square), 6);
+        assert_eq!(file(square), 0);
+        assert_eq!(index(6,0), square);
 
         square = Square::E3 as u64;
         assert_eq!(square, 20);
-        assert_eq!(rank(&square), 2);
-        assert_eq!(file(&square), 4);
-        assert_eq!(index(&2,&4), square);
+        assert_eq!(rank(square), 2);
+        assert_eq!(file(square), 4);
+        assert_eq!(index(2,4), square);
     }
     #[test]
     fn test_flip(){

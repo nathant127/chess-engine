@@ -14,6 +14,29 @@ pub struct Board {
     pub qb: BitBoard,
     pub kb: BitBoard
 }
+impl Default for Board {
+    fn default() -> Board {
+        INITIAL_BOARD
+    }
+}
+
+pub fn make_board(pw: BitBoard, rw: BitBoard, nw: BitBoard, bw: BitBoard, qw: BitBoard, kw: BitBoard,pb: BitBoard, rb: BitBoard, nb: BitBoard, bb: BitBoard, qb: BitBoard, kb: BitBoard) -> Board{
+    let board: Board = Board {
+        pw: pw,
+        rw: rw,
+        nw: nw,
+        bw: bw,
+        qw: qw,
+        kw: kw,
+        pb: pb,
+        rb: rb,
+        nb: nb,
+        bb: bb,
+        qb: qb,
+        kb: kb
+    };
+    return board;
+}
 
 pub const INITIAL_BOARD: Board = Board {
     pw: 0x000000000000FF00,
@@ -31,7 +54,40 @@ pub const INITIAL_BOARD: Board = Board {
     kb: 0x1000000000000000
 };
 
+
 #[inline]
 pub fn all(state: &Board) -> BitBoard{
     return state.pw | state.rw | state.nw | state.bw | state.qw | state.kw | state.pb | state.rb | state.nb | state.bb | state.qb | state.kb;
+}
+#[inline]
+pub fn white(state: &Board) -> BitBoard {
+    return state.pw | state.rw | state.nw | state.bw | state.qw | state.kw;
+}
+#[inline]
+pub fn black(state: &Board) -> BitBoard {
+    return state.pb | state.rb | state.nb | state.bb | state.qb | state.kb;
+}
+
+#[inline]
+pub fn white_single_push(white_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+    return north_one(white_pawns) & empty;
+}
+#[inline]
+pub fn white_double_push(white_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+    return north_one(white_single_push(white_pawns, empty)) & RANK_4 & empty;
+}
+#[inline]
+pub fn black_single_push(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+    return south_one(black_pawns) & empty;
+}
+#[inline]
+pub fn black_double_push(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+    return south_one(black_single_push(black_pawns, empty)) & RANK_5 & empty;
+}
+
+
+
+#[inline]
+pub fn pawn_attack(state: &Board) -> BitBoard {
+    return 0;
 }
