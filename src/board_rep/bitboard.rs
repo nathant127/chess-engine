@@ -1,33 +1,11 @@
+use crate::board_rep::constants::*;
 // USES Little-Endian Rank-File Mapping (LERF)
 // a1 -> bit 0
 // h1 -> bit 7
 // a2 -> bit 8
 // h8 -> bit 63
 
-#[repr(u64)]
-pub enum Square {
-    A1, B1, C1, D1, E1, F1, G1, H1,
-    A2, B2, C2, D2, E2, F2, G2, H2,
-    A3, B3, C3, D3, E3, F3, G3, H3,
-    A4, B4, C4, D4, E4, F4, G4, H4,
-    A5, B5, C5, D5, E5, F5, G5, H5,
-    A6, B6, C6, D6, E6, F6, G6, H6,
-    A7, B7, C7, D7, E7, F7, G7, H7,
-    A8, B8, C8, D8, E8, F8, G8, H8
-}
-
 pub type BitBoard = u64;
-
-pub const FILE_A: BitBoard = 0x0101010101010101;
-pub const FILE_H: BitBoard = 0x8080808080808080;
-pub const RANK_1: BitBoard = 0x00000000000000FF;
-pub const RANK_4: BitBoard = RANK_1 << (8*3);
-pub const RANK_5: BitBoard = RANK_1 << (8*4);
-pub const RANK_8: BitBoard = 0xFF00000000000000;
-pub const DIAG_A1_H8: BitBoard = 0x8040201008040201;
-pub const DIAG_H1_A8: BitBoard = 0x0102040810204080;
-pub const SQUARE_LIGHT: BitBoard = 0x55AA55AA55AA55AA;
-pub const SQUARE_DARK: BitBoard = 0xAA55AA55AA55AA55;
 
 #[inline]
 pub const fn index(rank: u64, file: u64) -> u64{
@@ -132,18 +110,6 @@ pub fn popcount_loop(mut board: BitBoard) -> u64 {
     return count;
 }
 
-const BITSCAN_INDEX: [u64; 64] = [
-    0, 47,  1, 56, 48, 27,  2, 60,
-    57, 49, 41, 37, 28, 16,  3, 61,
-    54, 58, 35, 52, 50, 42, 21, 44,
-    38, 32, 29, 23, 17, 11,  4, 62,
-    46, 55, 26, 59, 40, 36, 15, 53,
-    34, 51, 20, 43, 31, 22, 10, 45,
-    25, 39, 14, 33, 19, 30,  9, 24,
-    13, 18,  8, 12,  7,  6,  5, 63
-];
-const BITSCAN_DEBRUIJIN: u64 = 0x03f79d71b4cb0a89;
-
 /** Returns the index of the Least significant 1 bit of the bitboard
  * https://www.chessprogramming.org/BitScan 
  */
@@ -181,13 +147,21 @@ pub fn south_fill(mut board: BitBoard) -> BitBoard {
 }
 
 #[inline]
-pub fn north_one(board: BitBoard) -> BitBoard {
-    return board << 8;
-}
+pub const fn shift_north(board: BitBoard) -> BitBoard {return board << 8;}
 #[inline]
-pub fn south_one(board: BitBoard) -> BitBoard{
-    return board >> 8;
-}
+pub const fn shift_south(board: BitBoard) -> BitBoard {return board >> 8;}
+#[inline]
+pub const fn shift_east(b : BitBoard) -> BitBoard {return (b << 1) & NOT_FILE_A;}
+#[inline]
+pub const fn shift_northeast(b: BitBoard) -> BitBoard {return (b << 9) & NOT_FILE_A;}
+#[inline]
+pub const fn shift_southeast(b: BitBoard) -> BitBoard {return (b >> 7) & NOT_FILE_A;}
+#[inline]
+pub const fn shift_west(b : BitBoard) -> BitBoard {return (b >> 1) & NOT_FILE_A;}
+#[inline]
+pub const fn shift_southwest(b: BitBoard) -> BitBoard {return (b >> 9) & NOT_FILE_A;}
+#[inline]
+pub const fn shift_northwest(b: BitBoard) -> BitBoard {return (b << 7) & NOT_FILE_A;}
 
 #[cfg(test)]
 mod test {

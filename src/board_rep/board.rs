@@ -1,4 +1,5 @@
 use crate::board_rep::bitboard::*;
+use crate::board_rep::constants::*;
 
 pub struct Board {
     pub pw: BitBoard,
@@ -38,21 +39,7 @@ pub fn make_board(pw: BitBoard, rw: BitBoard, nw: BitBoard, bw: BitBoard, qw: Bi
     return board;
 }
 
-pub const INITIAL_BOARD: Board = Board {
-    pw: 0x000000000000FF00,
-    rw: 0x0000000000000081,
-    nw: 0x0000000000000042,
-    bw: 0x0000000000000024,
-    qw: 0x0000000000000010,
-    kw: 0x0000000000000008,
 
-    pb: 0x00FF000000000000,
-    rb: 0x8100000000000000,
-    nb: 0x4200000000000000,
-    bb: 0x2400000000000000,
-    qb: 0x0800000000000000,
-    kb: 0x1000000000000000
-};
 
 
 #[inline]
@@ -70,24 +57,28 @@ pub fn black(state: &Board) -> BitBoard {
 
 #[inline]
 pub fn white_single_push(white_pawns: BitBoard, empty: BitBoard) -> BitBoard {
-    return north_one(white_pawns) & empty;
+    return shift_north(white_pawns) & empty;
 }
 #[inline]
 pub fn white_double_push(white_pawns: BitBoard, empty: BitBoard) -> BitBoard {
-    return north_one(white_single_push(white_pawns, empty)) & RANK_4 & empty;
+    return shift_north(white_single_push(white_pawns, empty)) & RANK_4 & empty;
 }
 #[inline]
 pub fn black_single_push(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
-    return south_one(black_pawns) & empty;
+    return shift_south(black_pawns) & empty;
 }
 #[inline]
 pub fn black_double_push(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
-    return south_one(black_single_push(black_pawns, empty)) & RANK_5 & empty;
+    return shift_south(black_single_push(black_pawns, empty)) & RANK_5 & empty;
 }
 
 
 
 #[inline]
-pub fn pawn_attack(state: &Board) -> BitBoard {
-    return 0;
+pub fn white_pawn_attack(index: usize, black_pieces: BitBoard) -> BitBoard {
+    return WHITE_PAWN_ATTACKS[index] & black_pieces;
+}
+#[inline]
+pub fn black_pawn_attack(index: usize, white_pieces: BitBoard) -> BitBoard {
+    return BLACK_PAWN_ATTACKS[index] & white_pieces;
 }

@@ -1,4 +1,59 @@
 use crate::board_rep::bitboard::*;
+use crate::board_rep::board::Board;
+
+pub const FILE_A: BitBoard = 0x0101010101010101;
+pub const FILE_H: BitBoard = 0x8080808080808080;
+pub const NOT_FILE_A: BitBoard = !FILE_A;
+pub const NOT_FILE_H: BitBoard = !FILE_H;
+pub const RANK_1: BitBoard = 0x00000000000000FF;
+pub const RANK_4: BitBoard = RANK_1 << (8*3);
+pub const RANK_5: BitBoard = RANK_1 << (8*4);
+pub const RANK_8: BitBoard = 0xFF00000000000000;
+pub const DIAG_A1_H8: BitBoard = 0x8040201008040201;
+pub const DIAG_H1_A8: BitBoard = 0x0102040810204080;
+pub const SQUARE_LIGHT: BitBoard = 0x55AA55AA55AA55AA;
+pub const SQUARE_DARK: BitBoard = 0xAA55AA55AA55AA55;
+
+#[repr(u64)]
+pub enum Square {
+    A1, B1, C1, D1, E1, F1, G1, H1,
+    A2, B2, C2, D2, E2, F2, G2, H2,
+    A3, B3, C3, D3, E3, F3, G3, H3,
+    A4, B4, C4, D4, E4, F4, G4, H4,
+    A5, B5, C5, D5, E5, F5, G5, H5,
+    A6, B6, C6, D6, E6, F6, G6, H6,
+    A7, B7, C7, D7, E7, F7, G7, H7,
+    A8, B8, C8, D8, E8, F8, G8, H8
+}
+
+pub const INITIAL_BOARD: Board = Board {
+    pw: 0x000000000000FF00,
+    rw: 0x0000000000000081,
+    nw: 0x0000000000000042,
+    bw: 0x0000000000000024,
+    qw: 0x0000000000000010,
+    kw: 0x0000000000000008,
+
+    pb: 0x00FF000000000000,
+    rb: 0x8100000000000000,
+    nb: 0x4200000000000000,
+    bb: 0x2400000000000000,
+    qb: 0x0800000000000000,
+    kb: 0x1000000000000000
+};
+
+pub const BITSCAN_INDEX: [u64; 64] = [
+    0, 47,  1, 56, 48, 27,  2, 60,
+    57, 49, 41, 37, 28, 16,  3, 61,
+    54, 58, 35, 52, 50, 42, 21, 44,
+    38, 32, 29, 23, 17, 11,  4, 62,
+    46, 55, 26, 59, 40, 36, 15, 53,
+    34, 51, 20, 43, 31, 22, 10, 45,
+    25, 39, 14, 33, 19, 30,  9, 24,
+    13, 18,  8, 12,  7,  6,  5, 63
+];
+pub const BITSCAN_DEBRUIJIN: u64 = 0x03f79d71b4cb0a89;
+
 
 pub const WHITE_PAWN_ATTACKS: [u64; 64] = init_wpawn_attacks();
 pub const BLACK_PAWN_ATTACKS: [u64; 64] = init_bpawn_attacks();

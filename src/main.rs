@@ -1,5 +1,6 @@
 use chess_engine::board_rep::bitboard;
 use chess_engine::board_rep::board::*;
+use chess_engine::board_rep::constants;
 use chess_engine::board_rep::debug;
 use chess_engine::board_rep::constants::*;
 
@@ -14,7 +15,7 @@ fn main() {
     board_mut = bitboard::south_fill(board);
     debug::print_bitboard(board_mut);
 
-    debug::print_bitboard(BLACK_PAWN_ATTACKS[bitboard::Square::C7 as usize]);
+    debug::print_bitboard(BLACK_PAWN_ATTACKS[constants::Square::C7 as usize]);
     //println!();
     //debug::print_bitboard(&bitboard::rotate90cw(&INITIAL_BOARD.pw));
 }
