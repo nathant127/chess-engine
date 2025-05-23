@@ -15,7 +15,7 @@ fn main() {
     board_mut = bitboard::south_fill(board);
     debug::print_bitboard(board_mut);
 
-    debug::print_bitboard(BLACK_PAWN_ATTACKS[constants::Square::C7 as usize]);
+    debug::print_bitboard(KNIGHT_TARGETS[constants::Square::E4 as usize]);
     //println!();
     //debug::print_bitboard(&bitboard::rotate90cw(&INITIAL_BOARD.pw));
 }

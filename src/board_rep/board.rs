@@ -56,20 +56,20 @@ pub fn black(state: &Board) -> BitBoard {
 }
 
 #[inline]
-pub fn white_single_push(white_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+pub fn white_single_push_targets(white_pawns: BitBoard, empty: BitBoard) -> BitBoard {
     return shift_north(white_pawns) & empty;
 }
 #[inline]
-pub fn white_double_push(white_pawns: BitBoard, empty: BitBoard) -> BitBoard {
-    return shift_north(white_single_push(white_pawns, empty)) & RANK_4 & empty;
+pub fn white_double_push_targets(white_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+    return shift_north(white_single_push_targets(white_pawns, empty)) & RANK_4 & empty;
 }
 #[inline]
-pub fn black_single_push(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+pub fn black_single_push_targets(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
     return shift_south(black_pawns) & empty;
 }
 #[inline]
-pub fn black_double_push(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
-    return shift_south(black_single_push(black_pawns, empty)) & RANK_5 & empty;
+pub fn black_double_push_targets(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+    return shift_south(black_single_push_targets(black_pawns, empty)) & RANK_5 & empty;
 }
 
 #[inline]
@@ -122,4 +122,9 @@ pub fn white_pawns_ableto_capture(white_pawns: BitBoard, black_pieces: BitBoard)
 #[inline]
 pub fn black_pawns_ableto_capture(black_pawns: BitBoard, white_pieces: BitBoard) -> BitBoard {
     return black_pawns & white_pawn_attacks(white_pieces);
+}
+
+#[inline]
+pub fn knight_captures(index: usize, opp_pieces: BitBoard) -> BitBoard {
+    return KNIGHT_TARGETS[index] & opp_pieces;
 }
