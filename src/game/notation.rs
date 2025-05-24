@@ -33,12 +33,12 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
     // Castle checker
     if notation == String::from("O-O") {
         special_action[SpecialActions::Castle as usize] = true;
-        return Some(Move{special_actions: special_action, org_square: 0, tgt_square: 0, piece: Piece::KING, colour: colour});
+        return Some(Move{special_actions: special_action, org_square: 0, tgt_square: 0, piece: Piece::King, colour: colour});
     }
     // Long Castle checker
     if notation == String::from("O-O-O") {
         special_action[SpecialActions::LongCastle as usize] = true;
-        return Some(Move{special_actions: special_action, org_square: 0, tgt_square: 0, piece: Piece::KING, colour: colour});
+        return Some(Move{special_actions: special_action, org_square: 0, tgt_square: 0, piece: Piece::King, colour: colour});
     }
 
     // Start parsing the string
@@ -52,7 +52,7 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
     let piece: Piece = match_piece(next_char);
 
     // Pawn is expressed by there being no piece character so only get next char if it is not a pawn
-    if piece != Piece::PAWN {
+    if piece != Piece::Pawn {
         next_char = match it.next() {
             Some(char) => char,
             None => return None,
@@ -96,13 +96,13 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
     // Because Non-Pawns are reversible you can just run the normal targets functions using the target square in place of the piece square
     // (Ie. checking if a piece can attack a square is equivalent to checking if a square can attack a piece) 
     let possible_pieces = match piece {
-        Piece::QUEEN => queen_targets(tgt_index, occupied) & board.get_bb(Piece::QUEEN, colour),
-        Piece::BISHOP => bishop_targets(tgt_index, occupied) & board.get_bb(Piece::BISHOP, colour),
-        Piece::KING => king_targets(tgt_index) & board.get_bb(Piece::KING, colour),
-        Piece::ROOK => rook_targets(tgt_index, occupied) & board.get_bb(Piece::ROOK, colour),
-        Piece::KNIGHT => knight_targets(tgt_index) & board.get_bb(Piece::KNIGHT, colour),
-        Piece::PAWN => {
-            if colour == Colour::WHITE  {white_pawns_target_square(tgt_index, board.pw, opp_pieces, empty)}
+        Piece::Queen => queen_targets(tgt_index, occupied) & board.get_bb(Piece::Queen, colour),
+        Piece::Bishop => bishop_targets(tgt_index, occupied) & board.get_bb(Piece::Bishop, colour),
+        Piece::King => king_targets(tgt_index) & board.get_bb(Piece::King, colour),
+        Piece::Rook => rook_targets(tgt_index, occupied) & board.get_bb(Piece::Rook, colour),
+        Piece::Knight => knight_targets(tgt_index) & board.get_bb(Piece::Knight, colour),
+        Piece::Pawn => {
+            if colour == Colour::White  {white_pawns_target_square(tgt_index, board.pw, opp_pieces, empty)}
             else                        {black_pawns_target_square(tgt_index, board.pb, opp_pieces, empty)}
         }
     };
@@ -142,12 +142,12 @@ fn remove_match(str: &mut String, char: char) -> bool {
 
 fn match_piece(char: char) -> Piece {
     match char {
-        'n' => Piece::KNIGHT,
-        'b' => Piece::BISHOP,
-        'r' => Piece::ROOK,
-        'q' => Piece::QUEEN,
-        'k' => Piece::KING,
-        _ => Piece::PAWN
+        'n' => Piece::Knight,
+        'b' => Piece::Bishop,
+        'r' => Piece::Rook,
+        'q' => Piece::Queen,
+        'k' => Piece::King,
+        _ => Piece::Pawn
     }
 }
 

@@ -120,8 +120,8 @@ impl BitOr<BitBoard> for Board {
 impl Board {
     pub fn get_colour(self: &Self, colour: Colour) -> BitBoard {
         match colour {
-            Colour::WHITE => white(self),
-            Colour::BLACK => black(self),
+            Colour::White => white(self),
+            Colour::Black => black(self),
         }
     }
 }
@@ -398,13 +398,13 @@ pub fn queen_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) ->
 /** Slow function, should not be used for search */
 pub fn targets(square: usize, piece: Piece, colour: Colour, occupied: BitBoard) -> BitBoard {
     match piece {
-        Piece::QUEEN => queen_targets(square, occupied),
-        Piece::BISHOP => bishop_targets(square, occupied),
-        Piece::KING => king_targets(square),
-        Piece::ROOK => rook_targets(square, occupied),
-        Piece::KNIGHT => knight_targets(square),
-        Piece::PAWN => {
-            if colour == Colour::WHITE  {white_pawn_targets(square, occupied)}
+        Piece::Queen => queen_targets(square, occupied),
+        Piece::Bishop => bishop_targets(square, occupied),
+        Piece::King => king_targets(square),
+        Piece::Rook => rook_targets(square, occupied),
+        Piece::Knight => knight_targets(square),
+        Piece::Pawn => {
+            if colour == Colour::White  {white_pawn_targets(square, occupied)}
             else                        {black_pawn_targets(square, occupied)}
         }
     }

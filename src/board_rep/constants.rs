@@ -33,7 +33,7 @@ pub enum Square {
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Piece {
-    PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING
+    Pawn, Knight, Bishop, Rook, Queen, King
 }
 impl Mul<Colour> for Piece {
     type Output = PieceColour;
@@ -44,8 +44,8 @@ impl Mul<Colour> for Piece {
 
 #[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Colour {
-    WHITE,
-    BLACK
+    White,
+    Black
 }
 impl Mul<Piece> for Colour {
     type Output = PieceColour;
@@ -57,8 +57,8 @@ impl Not for Colour {
     type Output = Colour;
     fn not(self: Self) -> Self::Output {
         match self {
-            Colour::WHITE => Colour::BLACK,
-            Colour::BLACK => Colour::WHITE,
+            Colour::White => Colour::Black,
+            Colour::Black => Colour::White,
         }
     }
 }

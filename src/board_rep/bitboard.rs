@@ -113,7 +113,7 @@ pub fn popcount_loop(mut board: BitBoard) -> u64 {
 /** Returns the index of the Least significant 1 bit of the bitboard
  * https://www.chessprogramming.org/BitScan 
  */
-pub fn bitscan_forward(board: BitBoard) -> usize {
+pub const fn bitscan_forward(board: BitBoard) -> usize {
     assert!(board != 0, "Bitscan forward recieved a board 0");
     return BITSCAN_INDEX[(((board ^ (board-1)).overflowing_mul(BITSCAN_DEBRUIJIN).0) >> 58) as usize];
 }
@@ -121,7 +121,7 @@ pub fn bitscan_forward(board: BitBoard) -> usize {
 /** Returns the index of the Most significant 1 bit of the bitboard
  * https://www.chessprogramming.org/BitScan 
  */
-pub fn bitscan_reverse(mut board: BitBoard) -> usize {
+pub const fn bitscan_reverse(mut board: BitBoard) -> usize {
    assert!(board != 0, "Bitscan reverse recieved a board 0");
    board |= board >> 1; 
    board |= board >> 2;
@@ -147,31 +147,43 @@ pub fn south_fill(mut board: BitBoard) -> BitBoard {
 }
 
 #[inline]
-pub const fn shift_north(board: BitBoard) -> BitBoard {return board << 8;}
+pub const fn shift_north(board: BitBoard) -> BitBoard {board << 8}
 #[inline]
-pub const fn shift_south(board: BitBoard) -> BitBoard {return board >> 8;}
+pub const fn shift_south(board: BitBoard) -> BitBoard {board >> 8}
 #[inline]
-pub const fn shift_east(b : BitBoard) -> BitBoard {return (b << 1) & NOT_FILE_A;}
+pub const fn shift_east(b : BitBoard) -> BitBoard {(b << 1) & NOT_FILE_A}
 #[inline]
-pub const fn shift_northeast(b: BitBoard) -> BitBoard {return (b << 9) & NOT_FILE_A;}
+pub const fn shift_northeast(b: BitBoard) -> BitBoard {(b << 9) & NOT_FILE_A}
 #[inline]
-pub const fn shift_southeast(b: BitBoard) -> BitBoard {return (b >> 7) & NOT_FILE_A;}
+pub const fn shift_southeast(b: BitBoard) -> BitBoard {(b >> 7) & NOT_FILE_A}
 #[inline]
-pub const fn shift_west(b : BitBoard) -> BitBoard {return (b >> 1) & NOT_FILE_H;}
+pub const fn shift_west(b : BitBoard) -> BitBoard {(b >> 1) & NOT_FILE_H}
 #[inline]
-pub const fn shift_southwest(b: BitBoard) -> BitBoard {return (b >> 9) & NOT_FILE_H;}
+pub const fn shift_southwest(b: BitBoard) -> BitBoard {(b >> 9) & NOT_FILE_H}
 #[inline]
-pub const fn shift_northwest(b: BitBoard) -> BitBoard {return (b << 7) & NOT_FILE_H;}
+pub const fn shift_northwest(b: BitBoard) -> BitBoard {(b << 7) & NOT_FILE_H}
 
 #[inline]
-pub const fn shift_northdbl(board: BitBoard) -> BitBoard {return board << 16;}
+pub const fn shift_northdbl(board: BitBoard) -> BitBoard {board << 16}
 #[inline]
-pub const fn shift_southdbl(board: BitBoard) -> BitBoard {return board >> 16;}
+pub const fn shift_southdbl(board: BitBoard) -> BitBoard {board >> 16}
 
 #[inline]
-pub const fn shift_northx(board: BitBoard, x: u64) -> BitBoard {return board << 8*x;}
+pub const fn shift_northx(board: BitBoard, x: u64) -> BitBoard {board << 8*x}
 #[inline]
-pub const fn shift_southx(board: BitBoard, x: u64) -> BitBoard {return board >> 8*x;}
+pub const fn shift_southx(board: BitBoard, x: u64) -> BitBoard {board >> 8*x}
+
+#[inline]
+pub const fn isolate(board: BitBoard) -> BitBoard {board & board.wrapping_neg()}
+#[inline]
+pub const fn reset(board: BitBoard) -> BitBoard {board & (board-1)}
+
+#[inline]
+pub const fn pop(board: &mut BitBoard) -> usize {
+    let square = bitscan_forward(*board);
+    *board = reset(*board);
+    return square;
+}
 
 
 #[cfg(test)]

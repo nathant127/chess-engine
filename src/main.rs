@@ -9,7 +9,7 @@ fn main() {
     let mut board: Board = INITIAL_BOARD;
     loop {
         print_board(&board);
-        let mov: Move = match read_notation(&board, Colour::WHITE) {
+        let mov: Move = match read_notation(&board, Colour::White) {
             Some(mov) => mov,
             None => {
                 println!("Notation Was Invalid"); 
