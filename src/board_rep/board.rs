@@ -125,8 +125,24 @@ pub fn black_pawns_ableto_capture(black_pawns: BitBoard, white_pieces: BitBoard)
 }
 
 #[inline]
+pub fn knight_targets(index: usize) -> BitBoard {
+    return KNIGHT_TARGETS[index];
+}
+#[inline]
 pub fn knight_captures(index: usize, opp_pieces: BitBoard) -> BitBoard {
-    return KNIGHT_TARGETS[index] & opp_pieces;
+    return knight_targets(index) & opp_pieces;
+}
+
+/**
+ * TODO: Add check rules
+ */
+#[inline]
+pub fn king_targets(index: usize) -> BitBoard {
+    return KING_TARGETS[index];
+}
+#[inline]
+pub fn king_captures(index: usize, opp_pieces: BitBoard) -> BitBoard {
+    return king_targets(index) & opp_pieces;
 }
 
 /**
@@ -165,6 +181,10 @@ pub fn get_rook_targets(index: usize, occupied: BitBoard) -> BitBoard {
     targets |= get_ray_targets_neg(occupied, RayDir::W as usize, index);
     return targets;
 }
+#[inline]
+pub fn get_rook_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
+    return get_rook_targets(index, occupied) & opp_pieces;
+}
 
 pub fn get_bishop_targets(index: usize, occupied: BitBoard) -> BitBoard {
     let mut targets = 0;
@@ -173,6 +193,10 @@ pub fn get_bishop_targets(index: usize, occupied: BitBoard) -> BitBoard {
     targets |= get_ray_targets_neg(occupied, RayDir::SE as usize, index);
     targets |= get_ray_targets_neg(occupied, RayDir::SW as usize, index);
     return targets;
+}
+#[inline]
+pub fn get_bishop_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
+    return get_bishop_targets(index, occupied) & opp_pieces;
 }
 
 pub fn get_queen_targets(index: usize, occupied: BitBoard) -> BitBoard {
@@ -186,4 +210,8 @@ pub fn get_queen_targets(index: usize, occupied: BitBoard) -> BitBoard {
     targets |= get_ray_targets_neg(occupied, RayDir::SE as usize, index);
     targets |= get_ray_targets_neg(occupied, RayDir::SW as usize, index);
     return targets;
+}
+#[inline]
+pub fn get_queen_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
+    return get_queen_targets(index, occupied) & opp_pieces;
 }
