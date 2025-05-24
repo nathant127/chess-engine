@@ -15,7 +15,7 @@ fn main() {
     board_mut = bitboard::south_fill(board);
     debug::print_bitboard(board_mut);
 
-    debug::print_bitboard(KING_TARGETS[constants::Square::E4 as usize]);
+    debug::print_bitboard(RAY_TARGETS[RayDir::N as usize][constants::Square::A1 as usize]);
     //println!();
     //debug::print_bitboard(&bitboard::rotate90cw(&INITIAL_BOARD.pw));
 }

@@ -128,3 +128,62 @@ pub fn black_pawns_ableto_capture(black_pawns: BitBoard, white_pieces: BitBoard)
 pub fn knight_captures(index: usize, opp_pieces: BitBoard) -> BitBoard {
     return KNIGHT_TARGETS[index] & opp_pieces;
 }
+
+/**
+ * Should only be used for directions N, NE, E, NW (pos directions)
+ * NOTE: Will return a bitboard that includes the location of all blockers (both white and black pieces)
+ */
+pub fn get_ray_targets_pos(occupied: BitBoard, dir: usize, index: usize) -> BitBoard {
+    let mut ray = RAY_TARGETS[dir][index];
+    let blockers = ray & occupied;
+    if blockers != 0 {
+        let bitscan = bitscan_forward(blockers);
+        ray ^= RAY_TARGETS[dir][bitscan as usize];
+    }
+    return ray;
+}
+
+/**
+ * Should only be used for directions S, SE, SW, W (neg directions)
+ * NOTE: Will return a bitboard that includes the location of all blockers (both white and black pieces)
+ */
+pub fn get_ray_targets_neg(occupied: BitBoard, dir: usize, index: usize) -> BitBoard {
+    let mut ray = RAY_TARGETS[dir][index];
+    let blockers = ray & occupied;
+    if blockers != 0 {
+        let bitscan = bitscan_reverse(blockers);
+        ray ^= RAY_TARGETS[dir][bitscan as usize];
+    }
+    return ray;
+}
+
+pub fn get_rook_targets(index: usize, occupied: BitBoard) -> BitBoard {
+    let mut targets = 0;
+    targets |= get_ray_targets_pos(occupied, RayDir::N as usize, index);
+    targets |= get_ray_targets_pos(occupied, RayDir::E as usize, index);
+    targets |= get_ray_targets_neg(occupied, RayDir::S as usize, index);
+    targets |= get_ray_targets_neg(occupied, RayDir::W as usize, index);
+    return targets;
+}
+
+pub fn get_bishop_targets(index: usize, occupied: BitBoard) -> BitBoard {
+    let mut targets = 0;
+    targets |= get_ray_targets_pos(occupied, RayDir::NE as usize, index);
+    targets |= get_ray_targets_pos(occupied, RayDir::NW as usize, index);
+    targets |= get_ray_targets_neg(occupied, RayDir::SE as usize, index);
+    targets |= get_ray_targets_neg(occupied, RayDir::SW as usize, index);
+    return targets;
+}
+
+pub fn get_queen_targets(index: usize, occupied: BitBoard) -> BitBoard {
+    let mut targets = 0;
+    targets |= get_ray_targets_pos(occupied, RayDir::N as usize, index);
+    targets |= get_ray_targets_pos(occupied, RayDir::E as usize, index);
+    targets |= get_ray_targets_neg(occupied, RayDir::S as usize, index);
+    targets |= get_ray_targets_neg(occupied, RayDir::W as usize, index);
+    targets |= get_ray_targets_pos(occupied, RayDir::NE as usize, index);
+    targets |= get_ray_targets_pos(occupied, RayDir::NW as usize, index);
+    targets |= get_ray_targets_neg(occupied, RayDir::SE as usize, index);
+    targets |= get_ray_targets_neg(occupied, RayDir::SW as usize, index);
+    return targets;
+}

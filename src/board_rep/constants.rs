@@ -60,6 +60,15 @@ pub const BLACK_PAWN_ATTACKS: [u64; 64] = init_bpawn_attacks();
 pub const KNIGHT_TARGETS: [u64; 64] = init_knight_targets();
 pub const KING_TARGETS: [u64; 64] = init_king_targets();
 
+#[repr(usize)]
+pub enum RayDir {
+    N, NE,
+    E, SE,
+    S, SW,
+    W, NW
+}
+pub const RAY_TARGETS: [[u64; 64]; 8] = init_ray_targets();
+
 const fn init_wpawn_attacks() -> [u64; 64] {
     let mut arr: [u64; 64] = [0; 64];
     let mut i: usize = 0;
@@ -130,6 +139,74 @@ const fn init_king_targets() -> [u64; 64] {
         arr[i] = shift_east(pos) | shift_west(pos);
         pos |= arr[i];
         arr[i] |= shift_north(pos) | shift_south(pos);
+        i += 1;
+    }
+    return arr;
+}
+
+const fn init_ray_targets() -> [[u64; 64]; 8] {
+    let mut arr: [[u64; 64]; 8] = [[0; 64]; 8];
+
+    let mut i = 0;
+    while i < arr[0].len() {
+        let pos: u64 = 1 << i;
+
+        arr[RayDir::N as usize][i] = shift_north(pos);
+        let mut j = 0;
+        while j < 7 {
+            arr[RayDir::N as usize][i] |= shift_north(arr[RayDir::N as usize][i]);
+            j += 1;
+        }
+
+        arr[RayDir::NE as usize][i] = shift_northeast(pos);
+        j = 0;
+        while j < 7 {
+            arr[RayDir::NE as usize][i] |= shift_northeast(arr[RayDir::NE as usize][i]);
+            j += 1;
+        }
+
+        arr[RayDir::E as usize][i] = shift_east(pos);
+        j = 0;
+        while j < 7 {
+            arr[RayDir::E as usize][i] |= shift_east(arr[RayDir::E as usize][i]);
+            j += 1;
+        }
+
+        arr[RayDir::SE as usize][i] = shift_southeast(pos);
+        j = 0;
+        while j < 7 {
+            arr[RayDir::SE as usize][i] |= shift_southeast(arr[RayDir::SE as usize][i]);
+            j += 1;
+        }
+
+        arr[RayDir::S as usize][i] = shift_south(pos);
+        j = 0;
+        while j < 7 {
+            arr[RayDir::S as usize][i] |= shift_south(arr[RayDir::NE as usize][i]);
+            j += 1;
+        }
+
+        arr[RayDir::SW as usize][i] = shift_southwest(pos);
+        j = 0;
+        while j < 7 {
+            arr[RayDir::SW as usize][i] |= shift_southwest(arr[RayDir::NE as usize][i]);
+            j += 1;
+        }
+
+        arr[RayDir::W as usize][i] = shift_west(pos);
+        j = 0;
+        while j < 7 {
+            arr[RayDir::W as usize][i] |= shift_west(arr[RayDir::NE as usize][i]);
+            j += 1;
+        }
+
+        arr[RayDir::NW as usize][i] = shift_northwest(pos);
+        j = 0;
+        while j < 7 {
+            arr[RayDir::NW as usize][i] |= shift_northwest(arr[RayDir::NE as usize][i]);
+            j += 1;
+        }
+
         i += 1;
     }
     return arr;
