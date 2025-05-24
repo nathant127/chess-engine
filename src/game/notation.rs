@@ -22,22 +22,22 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
     let mut special_action: [bool; 5] = [false; 5];
 
     // Check for captures
-    special_action[SpecialActions::CAPTURE as usize] = remove_match(&mut notation, 'x');
+    special_action[SpecialActions::Capture as usize] = remove_match(&mut notation, 'x');
 
     // Check for Check
-    special_action[SpecialActions::CHECK as usize] = remove_match(&mut notation, '+');
+    special_action[SpecialActions::Check as usize] = remove_match(&mut notation, '+');
 
     // Check for Checkmate
-    special_action[SpecialActions::CHECKMATE as usize] = remove_match(&mut notation, '#');
+    special_action[SpecialActions::CheckMate as usize] = remove_match(&mut notation, '#');
 
     // Castle checker
     if notation == String::from("O-O") {
-        special_action[SpecialActions::CASTLE as usize] = true;
+        special_action[SpecialActions::Castle as usize] = true;
         return Some(Move{special_actions: special_action, org_square: 0, tgt_square: 0, piece: Piece::KING, colour: colour});
     }
     // Long Castle checker
     if notation == String::from("O-O-O") {
-        special_action[SpecialActions::LONG_CASTLE as usize] = true;
+        special_action[SpecialActions::LongCastle as usize] = true;
         return Some(Move{special_actions: special_action, org_square: 0, tgt_square: 0, piece: Piece::KING, colour: colour});
     }
 
@@ -87,16 +87,7 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
 
     let tgt_index = bitboard::index(tgt_rank, tgt_file);
 
-
-    // generating board info
-    let my_pieces = match colour {
-        Colour::BLACK => black(board),
-        Colour::WHITE => white(board),
-    };
-    let opp_pieces = match colour {
-        Colour::BLACK => white(board),
-        Colour::WHITE => black(board),
-    };
+    let opp_pieces = board.get_colour(!colour);
     let occupied = all(board);
     let empty = !occupied;
 
@@ -136,7 +127,7 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
     };
 
     if (1<<tgt_index) & opp_pieces != 0 {
-        special_action[SpecialActions::CAPTURE as usize] = true;
+        special_action[SpecialActions::Capture as usize] = true;
     }
 
     return Some(Move{special_actions: special_action, org_square: org_index, tgt_square: tgt_index, piece: piece, colour: colour});

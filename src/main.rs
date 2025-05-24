@@ -1,6 +1,5 @@
-use chess_engine::board_rep::bitboard;
+use chess_engine::board_rep::bitboard::*;
 use chess_engine::board_rep::board::*;
-use chess_engine::board_rep::constants;
 use chess_engine::board_rep::constants::*;
 use chess_engine::game::notation::read_notation;
 use chess_engine::game::game::*;

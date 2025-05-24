@@ -1,4 +1,4 @@
-use crate::board_rep::constants::*;
+use super::constants::*;
 // USES Little-Endian Rank-File Mapping (LERF)
 // a1 -> bit 0
 // h1 -> bit 7

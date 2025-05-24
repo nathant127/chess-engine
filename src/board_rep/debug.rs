@@ -1,5 +1,4 @@
-use crate::board_rep::bitboard::*;
-use crate::board_rep::board::{Board, all};
+use super::bitboard::*;
 
 pub fn print_bitboard(mut bitboard: BitBoard){
     flip_h(&mut bitboard);

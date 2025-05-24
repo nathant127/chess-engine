@@ -65,24 +65,24 @@ impl Not for Colour {
 
 #[derive(Eq, PartialEq, Clone, Copy)]
 pub enum PieceColour {
-    WHITE_PAWN, WHITE_KNIGHT, WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, WHITE_KING,
-    BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING
+    WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing,
+    BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing
 }
 impl PieceColour {
     fn from_usize(num: usize) -> PieceColour {
         match num {
-            0 => PieceColour::WHITE_PAWN,
-            1 => PieceColour::WHITE_KNIGHT,
-            2 => PieceColour::WHITE_BISHOP,
-            3 => PieceColour::WHITE_ROOK,
-            4 => PieceColour::WHITE_QUEEN,
-            5 => PieceColour::WHITE_KING,
-            6 => PieceColour::BLACK_PAWN,
-            7 => PieceColour::BLACK_KNIGHT,
-            8 => PieceColour::BLACK_BISHOP,
-            9 => PieceColour::BLACK_ROOK,
-            10 => PieceColour::BLACK_QUEEN,
-            11 => PieceColour::BLACK_KING,
+            0 => PieceColour::WhitePawn,
+            1 => PieceColour::WhiteKnight,
+            2 => PieceColour::WhiteBishop,
+            3 => PieceColour::WhiteRook,
+            4 => PieceColour::WhiteQueen,
+            5 => PieceColour::WhiteKing,
+            6 => PieceColour::BlackPawn,
+            7 => PieceColour::BlackKnight,
+            8 => PieceColour::BlackBishop,
+            9 => PieceColour::BlackRook,
+            10 => PieceColour::BlackQueen,
+            11 => PieceColour::BlackKing,
             _ => {panic!("Tried to convert to piececolour but no match was found")},
         }
     }
@@ -137,8 +137,8 @@ const fn init_wpawn_attacks() -> [u64; 64] {
 
     while i < arr.len() {
         let i_file = file(i); // Get file of pawn
-        let left_atk = (i + 7); // Get the index NW of pawn
-        let right_atk = (i + 9); // Get the index NE of pawn
+        let left_atk = i + 7; // Get the index NW of pawn
+        let right_atk = i + 9; // Get the index NE of pawn
 
         if rank(i) == 7{
             break;

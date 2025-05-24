@@ -1,14 +1,14 @@
-use crate::board_rep::bitboard::{BitBoard, row, flip_h, flip_v};
-use crate::board_rep::{board::*, debug};
+use crate::board_rep::bitboard::{BitBoard};
+use crate::board_rep::board::*;
 use crate::board_rep::constants::{Piece, Colour};
 
 #[derive(Eq, PartialEq)]
 pub enum SpecialActions {
-    CASTLE,
-    LONG_CASTLE,
-    CHECK,
-    CHECKMATE,
-    CAPTURE,
+    Castle,
+    LongCastle,
+    Check,
+    CheckMate,
+    Capture,
 }
 
 #[derive(Eq, PartialEq)]
@@ -76,7 +76,7 @@ pub fn execute_move(board: &mut Board, mov: &Move) {
         return;
     }
 
-    if mov.special_actions[SpecialActions::CAPTURE as usize] == true {
+    if mov.special_actions[SpecialActions::Capture as usize] == true {
         *board = *board & !(1<<mov.tgt_square);
     }
 
