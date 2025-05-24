@@ -1,6 +1,8 @@
 use crate::board_rep::bitboard::*;
 use crate::board_rep::constants::*;
 
+use super::bitboard;
+
 pub struct Board {
     pub pw: BitBoard,
     pub rw: BitBoard,
@@ -71,10 +73,25 @@ pub fn black_single_push_targets(black_pawns: BitBoard, empty: BitBoard) -> BitB
 pub fn black_double_push_targets(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
     return shift_south(black_single_push_targets(black_pawns, empty)) & RANK_5 & empty;
 }
+/** Returns the white pawn push targets (no captures) */
+#[inline]
+pub fn white_pawn_push_targets(white_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+    return white_single_push_targets(white_pawns, empty) | white_double_push_targets(white_pawns, empty);
+}
+/** Returns the black pawn push targets (no captures) */
+#[inline]
+pub fn black_pawn_push_targets(black_pawns: BitBoard, empty: BitBoard) -> BitBoard {
+    return black_single_push_targets(black_pawns, empty) | black_double_push_targets(black_pawns, empty);
+}
 
+/** Returns all squares the white pawns are attacking */
 #[inline]
 pub fn white_pawn_attacks(white_pawns: BitBoard) -> BitBoard {
     return shift_northeast(white_pawns) | shift_northwest(white_pawns);
+}
+#[inline]
+pub fn white_pawn_captures(white_pawns: BitBoard, black_pieces: BitBoard) -> BitBoard {
+    return white_pawn_attacks(white_pawns) & black_pieces;
 }
 #[inline]
 pub fn white_pawn_dbl_atks(white_pawns: BitBoard) -> BitBoard {
@@ -84,9 +101,14 @@ pub fn white_pawn_dbl_atks(white_pawns: BitBoard) -> BitBoard {
 pub fn white_pawn_single_atks(white_pawns: BitBoard) -> BitBoard {
     return shift_northeast(white_pawns) ^ shift_northwest(white_pawns);
 }
+/** Returns all squares the black pawns are attacking */
 #[inline]
 pub fn black_pawn_attacks(black_pawns: BitBoard) -> BitBoard {
     return shift_southeast(black_pawns) | shift_southwest(black_pawns);
+}
+#[inline]
+pub fn black_pawn_captures(black_pawns: BitBoard, white_pieces: BitBoard) -> BitBoard {
+    return black_pawn_attacks(black_pawns) & white_pieces;
 }
 #[inline]
 pub fn black_pawn_dbl_atks(black_pawns: BitBoard) -> BitBoard {
@@ -107,21 +129,73 @@ pub fn black_pawn_capture(index: usize, white_pieces: BitBoard) -> BitBoard {
 }
 
 #[inline]
-pub fn white_pawn_captures(white_pawns: BitBoard, black_pieces: BitBoard) -> BitBoard {
-    return white_pawn_attacks(white_pawns) & black_pieces;
-}
-#[inline]
-pub fn black_pawn_captures(black_pawns: BitBoard, white_pieces: BitBoard) -> BitBoard {
-    return black_pawn_attacks(black_pawns) & white_pieces;
-}
-
-#[inline]
 pub fn white_pawns_ableto_capture(white_pawns: BitBoard, black_pieces: BitBoard) -> BitBoard {
     return white_pawns & black_pawn_attacks(black_pieces);
 }
 #[inline]
 pub fn black_pawns_ableto_capture(black_pawns: BitBoard, white_pieces: BitBoard) -> BitBoard {
     return black_pawns & white_pawn_attacks(white_pieces);
+}
+
+/** Returns all targets for a white pawn at the specified square including diagonal defended squares */
+pub fn white_pawn_targets(square: usize, occupied: BitBoard, empty: BitBoard) -> BitBoard {
+    let mut bb = 0;
+    let pos = 1<< square;
+
+    bb |= white_pawn_captures(pos, occupied);
+    bb |= white_pawn_push_targets(pos, empty);
+
+    return bb;
+}
+/** Returns all targets for a black pawn at the specified square including diagonal defended squares */
+pub fn black_pawn_targets(square: usize, occupied: BitBoard, empty: BitBoard) -> BitBoard {
+    let mut bb = 0;
+    let pos = 1<< square;
+
+    bb |= black_pawn_captures(pos, occupied);
+    bb |= black_pawn_push_targets(pos, empty);
+
+    return bb;
+}
+
+/** Returns the white pawns that can move to a specified square */
+pub fn white_pawns_target_square(square: usize, white_pawns: BitBoard, black_pieces: BitBoard, empty: BitBoard) -> BitBoard {
+    let square_bb = 1<<square;
+    let is_capture = if square_bb & black_pieces == 0 {false} else {true};
+    
+    if is_capture {
+        black_pawn_attacks(square_bb) & white_pawns
+    }
+    else {
+        // Returns non zero only if there is a white pawn that can target the square
+        let is_valid_pawn = square_bb & (white_pawn_push_targets(white_pawns, empty)) != 0;
+        if is_valid_pawn == false 
+            {0}
+        else if shift_south(square_bb) & white_pawns != 0 
+            {shift_south(square_bb)}
+        else 
+            {shift_southdbl(square_bb)}
+    }
+}
+
+/** Returns the black pawns that can move to a specified square */
+pub fn black_pawns_target_square(square: usize, black_pawns: BitBoard, white_pieces: BitBoard, empty: BitBoard) -> BitBoard {
+    let square_bb = 1<<square;
+    let is_capture = if square_bb & white_pieces == 0 {false} else {true};
+    
+    if is_capture {
+        white_pawn_attacks(square_bb) & black_pawns
+    }
+    else {
+        // Returns non zero only if there is a white pawn that can target the square
+        let is_valid_pawn = square_bb & (black_pawn_push_targets(black_pawns, empty)) != 0;
+        if is_valid_pawn == false 
+            {0}
+        else if shift_north(square_bb) & black_pawns != 0 
+            {shift_north(square_bb)}
+        else 
+            {shift_northdbl(square_bb)}
+    }
 }
 
 #[inline]
@@ -149,7 +223,7 @@ pub fn king_captures(index: usize, opp_pieces: BitBoard) -> BitBoard {
  * Should only be used for directions N, NE, E, NW (pos directions)
  * NOTE: Will return a bitboard that includes the location of all blockers (both white and black pieces)
  */
-pub fn get_ray_targets_pos(occupied: BitBoard, dir: usize, index: usize) -> BitBoard {
+fn get_ray_targets_pos(occupied: BitBoard, dir: usize, index: usize) -> BitBoard {
     let mut ray = RAY_TARGETS[dir][index];
     let blockers = ray & occupied;
     if blockers != 0 {
@@ -163,7 +237,7 @@ pub fn get_ray_targets_pos(occupied: BitBoard, dir: usize, index: usize) -> BitB
  * Should only be used for directions S, SE, SW, W (neg directions)
  * NOTE: Will return a bitboard that includes the location of all blockers (both white and black pieces)
  */
-pub fn get_ray_targets_neg(occupied: BitBoard, dir: usize, index: usize) -> BitBoard {
+fn get_ray_targets_neg(occupied: BitBoard, dir: usize, index: usize) -> BitBoard {
     let mut ray = RAY_TARGETS[dir][index];
     let blockers = ray & occupied;
     if blockers != 0 {
@@ -173,7 +247,7 @@ pub fn get_ray_targets_neg(occupied: BitBoard, dir: usize, index: usize) -> BitB
     return ray;
 }
 
-pub fn get_rook_targets(index: usize, occupied: BitBoard) -> BitBoard {
+pub fn rook_targets(index: usize, occupied: BitBoard) -> BitBoard {
     let mut targets = 0;
     targets |= get_ray_targets_pos(occupied, RayDir::N as usize, index);
     targets |= get_ray_targets_pos(occupied, RayDir::E as usize, index);
@@ -182,11 +256,11 @@ pub fn get_rook_targets(index: usize, occupied: BitBoard) -> BitBoard {
     return targets;
 }
 #[inline]
-pub fn get_rook_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
-    return get_rook_targets(index, occupied) & opp_pieces;
+pub fn rook_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
+    return rook_targets(index, occupied) & opp_pieces;
 }
 
-pub fn get_bishop_targets(index: usize, occupied: BitBoard) -> BitBoard {
+pub fn bishop_targets(index: usize, occupied: BitBoard) -> BitBoard {
     let mut targets = 0;
     targets |= get_ray_targets_pos(occupied, RayDir::NE as usize, index);
     targets |= get_ray_targets_pos(occupied, RayDir::NW as usize, index);
@@ -195,11 +269,11 @@ pub fn get_bishop_targets(index: usize, occupied: BitBoard) -> BitBoard {
     return targets;
 }
 #[inline]
-pub fn get_bishop_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
-    return get_bishop_targets(index, occupied) & opp_pieces;
+pub fn bishop_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
+    return bishop_targets(index, occupied) & opp_pieces;
 }
 
-pub fn get_queen_targets(index: usize, occupied: BitBoard) -> BitBoard {
+pub fn queen_targets(index: usize, occupied: BitBoard) -> BitBoard {
     let mut targets = 0;
     targets |= get_ray_targets_pos(occupied, RayDir::N as usize, index);
     targets |= get_ray_targets_pos(occupied, RayDir::E as usize, index);
@@ -212,6 +286,37 @@ pub fn get_queen_targets(index: usize, occupied: BitBoard) -> BitBoard {
     return targets;
 }
 #[inline]
-pub fn get_queen_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
-    return get_queen_targets(index, occupied) & opp_pieces;
+pub fn queen_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
+    return queen_targets(index, occupied) & opp_pieces;
+}
+
+pub fn square_targeted_by(square: usize, occupied: BitBoard, piece: Piece) -> BitBoard{
+    if piece == Piece::PAWN {
+
+    }
+    targeting(square, occupied);
+}
+
+pub fn all_white_moves(board: &Board) -> [BitBoard; 64] {
+    let mut moves: [BitBoard; 64] = [0; 64];
+    let occupied: u64 = all(board);
+    let white_pieces: u64 = white(board);
+    let not_white_pieces: u64 = !white_pieces;
+    let black_pieces: u64 = black(board);
+
+    let mut index: usize = bitscan_forward(board.qw);
+    moves[index] = queen_targets(index, occupied) & not_white_pieces;
+
+    index = bitscan_forward(board.rw);
+    moves[index] = rook_targets(index, occupied) & not_white_pieces;
+    index = bitscan_reverse(board.rw);
+    moves[index] = rook_targets(index, occupied) & not_white_pieces;
+
+    for (i, &mut bb) in moves.iter_mut().enumerate() {
+        let pos: u64 = 1<<i;
+
+
+    }
+
+    return moves;
 }

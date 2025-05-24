@@ -6,8 +6,12 @@ pub const FILE_H: BitBoard = 0x8080808080808080;
 pub const NOT_FILE_A: BitBoard = !FILE_A;
 pub const NOT_FILE_H: BitBoard = !FILE_H;
 pub const RANK_1: BitBoard = 0x00000000000000FF;
+pub const RANK_2: BitBoard = RANK_1 << (8*1);
+pub const RANK_3: BitBoard = RANK_1 << (8*2);
 pub const RANK_4: BitBoard = RANK_1 << (8*3);
 pub const RANK_5: BitBoard = RANK_1 << (8*4);
+pub const RANK_6: BitBoard = RANK_1 << (8*5);
+pub const RANK_7: BitBoard = RANK_1 << (8*6);
 pub const RANK_8: BitBoard = 0xFF00000000000000;
 pub const DIAG_A1_H8: BitBoard = 0x8040201008040201;
 pub const DIAG_H1_A8: BitBoard = 0x0102040810204080;
@@ -26,6 +30,11 @@ pub enum Square {
     A8, B8, C8, D8, E8, F8, G8, H8
 }
 
+#[derive(PartialEq, Eq, Debug)]
+pub enum Piece {
+    PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING
+}
+
 pub const INITIAL_BOARD: Board = Board {
     pw: 0x000000000000FF00,
     rw: 0x0000000000000081,
@@ -42,7 +51,7 @@ pub const INITIAL_BOARD: Board = Board {
     kb: 0x1000000000000000
 };
 
-pub const BITSCAN_INDEX: [u64; 64] = [
+pub const BITSCAN_INDEX: [usize; 64] = [
     0, 47,  1, 56, 48, 27,  2, 60,
     57, 49, 41, 37, 28, 16,  3, 61,
     54, 58, 35, 52, 50, 42, 21, 44,
@@ -74,11 +83,11 @@ const fn init_wpawn_attacks() -> [u64; 64] {
     let mut i: usize = 0;
 
     while i < arr.len() {
-        let i_file = file(i as u64); // Get file of pawn
-        let left_atk = (i + 7) as u64; // Get the index NW of pawn
-        let right_atk = (i + 9) as u64; // Get the index NE of pawn
+        let i_file = file(i); // Get file of pawn
+        let left_atk = (i + 7); // Get the index NW of pawn
+        let right_atk = (i + 9); // Get the index NE of pawn
 
-        if rank(i as u64) == 7{
+        if rank(i) == 7{
             break;
         }
         // If the file of the attack is a distance of one away add it
@@ -212,13 +221,13 @@ const fn init_ray_targets() -> [[u64; 64]; 8] {
     return arr;
 }
 
-const fn init_temp() -> [u64; 64] {
-    let mut arr: [u64; 64] = [0; 64];
+// const fn init_temp() -> [u64; 64] {
+//     let mut arr: [u64; 64] = [0; 64];
 
-    let mut i = 0;
-    while i < arr.len() {
+//     let mut i = 0;
+//     while i < arr.len() {
 
-        i += 1;
-    }
-    return arr;
-}
+//         i += 1;
+//     }
+//     return arr;
+// }

@@ -8,17 +8,17 @@ use crate::board_rep::constants::*;
 pub type BitBoard = u64;
 
 #[inline]
-pub const fn index(rank: u64, file: u64) -> u64{
-    return 8*rank + file; // LSF mapping
+pub const fn index(rank: u64, file: u64) -> usize{
+    return (8*rank + file) as usize; // LSF mapping
 }
 #[inline]
-pub const fn file(index: u64) -> u64{
-    return index & 7; // Equivalent to mod 8
+pub const fn file(index: usize) -> u64{
+    return index as u64 & 7; // Equivalent to mod 8
 
 }
 #[inline]
-pub const fn rank(index: u64) -> u64{
-    return index >> 3;  // Equivalent to div/8
+pub const fn rank(index: usize) -> u64{
+    return index as u64 >> 3;  // Equivalent to div/8
 }
 
 #[inline]
@@ -113,7 +113,7 @@ pub fn popcount_loop(mut board: BitBoard) -> u64 {
 /** Returns the index of the Least significant 1 bit of the bitboard
  * https://www.chessprogramming.org/BitScan 
  */
-pub fn bitscan_forward(board: BitBoard) -> u64 {
+pub fn bitscan_forward(board: BitBoard) -> usize {
     assert!(board != 0, "Bitscan forward recieved a board 0");
     return BITSCAN_INDEX[(((board ^ (board-1)).overflowing_mul(BITSCAN_DEBRUIJIN).0) >> 58) as usize];
 }
@@ -121,7 +121,7 @@ pub fn bitscan_forward(board: BitBoard) -> u64 {
 /** Returns the index of the Most significant 1 bit of the bitboard
  * https://www.chessprogramming.org/BitScan 
  */
-pub fn bitscan_reverse(mut board: BitBoard) -> u64 {
+pub fn bitscan_reverse(mut board: BitBoard) -> usize {
    assert!(board != 0, "Bitscan reverse recieved a board 0");
    board |= board >> 1; 
    board |= board >> 2;
@@ -163,25 +163,36 @@ pub const fn shift_southwest(b: BitBoard) -> BitBoard {return (b >> 9) & NOT_FIL
 #[inline]
 pub const fn shift_northwest(b: BitBoard) -> BitBoard {return (b << 7) & NOT_FILE_A;}
 
+#[inline]
+pub const fn shift_northdbl(board: BitBoard) -> BitBoard {return board << 16;}
+#[inline]
+pub const fn shift_southdbl(board: BitBoard) -> BitBoard {return board >> 16;}
+
+#[inline]
+pub const fn shift_northx(board: BitBoard, x: u64) -> BitBoard {return board << 8*x;}
+#[inline]
+pub const fn shift_southx(board: BitBoard, x: u64) -> BitBoard {return board >> 8*x;}
+
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
     fn test_index(){
-        let mut square: u64 = Square::A1 as u64; 
+        let mut square: usize = Square::A1 as usize; 
         assert_eq!(square, 0);
         assert_eq!(rank(square), 0);
         assert_eq!(file(square), 0);
         assert_eq!(index(0,0), square);
         
-        square = Square::A7 as u64;
+        square = Square::A7 as usize;
         assert_eq!(square, 48);
         assert_eq!(rank(square), 6);
         assert_eq!(file(square), 0);
         assert_eq!(index(6,0), square);
 
-        square = Square::E3 as u64;
+        square = Square::E3 as usize;
         assert_eq!(square, 20);
         assert_eq!(rank(square), 2);
         assert_eq!(file(square), 4);
