@@ -157,11 +157,11 @@ pub const fn shift_northeast(b: BitBoard) -> BitBoard {return (b << 9) & NOT_FIL
 #[inline]
 pub const fn shift_southeast(b: BitBoard) -> BitBoard {return (b >> 7) & NOT_FILE_A;}
 #[inline]
-pub const fn shift_west(b : BitBoard) -> BitBoard {return (b >> 1) & NOT_FILE_A;}
+pub const fn shift_west(b : BitBoard) -> BitBoard {return (b >> 1) & NOT_FILE_H;}
 #[inline]
-pub const fn shift_southwest(b: BitBoard) -> BitBoard {return (b >> 9) & NOT_FILE_A;}
+pub const fn shift_southwest(b: BitBoard) -> BitBoard {return (b >> 9) & NOT_FILE_H;}
 #[inline]
-pub const fn shift_northwest(b: BitBoard) -> BitBoard {return (b << 7) & NOT_FILE_A;}
+pub const fn shift_northwest(b: BitBoard) -> BitBoard {return (b << 7) & NOT_FILE_H;}
 
 #[inline]
 pub const fn shift_northdbl(board: BitBoard) -> BitBoard {return board << 16;}

@@ -1,5 +1,6 @@
 use super::bitboard::*;
 use super::constants::*;
+use super::debug;
 use std::ops::{BitAnd, BitOr};
 
 

@@ -235,28 +235,28 @@ const fn init_ray_targets() -> [[u64; 64]; 8] {
         arr[RayDir::S as usize][i] = shift_south(pos);
         j = 0;
         while j < 7 {
-            arr[RayDir::S as usize][i] |= shift_south(arr[RayDir::NE as usize][i]);
+            arr[RayDir::S as usize][i] |= shift_south(arr[RayDir::S as usize][i]);
             j += 1;
         }
 
         arr[RayDir::SW as usize][i] = shift_southwest(pos);
         j = 0;
         while j < 7 {
-            arr[RayDir::SW as usize][i] |= shift_southwest(arr[RayDir::NE as usize][i]);
+            arr[RayDir::SW as usize][i] |= shift_southwest(arr[RayDir::SW as usize][i]);
             j += 1;
         }
 
         arr[RayDir::W as usize][i] = shift_west(pos);
         j = 0;
         while j < 7 {
-            arr[RayDir::W as usize][i] |= shift_west(arr[RayDir::NE as usize][i]);
+            arr[RayDir::W as usize][i] |= shift_west(arr[RayDir::W as usize][i]);
             j += 1;
         }
 
         arr[RayDir::NW as usize][i] = shift_northwest(pos);
         j = 0;
         while j < 7 {
-            arr[RayDir::NW as usize][i] |= shift_northwest(arr[RayDir::NE as usize][i]);
+            arr[RayDir::NW as usize][i] |= shift_northwest(arr[RayDir::NW as usize][i]);
             j += 1;
         }
 

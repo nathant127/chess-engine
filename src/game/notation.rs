@@ -100,15 +100,16 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
     let occupied = all(board);
     let empty = !occupied;
 
+    
     // Find all possible pieces of the specified type that can move to the target square
     // Because Non-Pawns are reversible you can just run the normal targets functions using the target square in place of the piece square
     // (Ie. checking if a piece can attack a square is equivalent to checking if a square can attack a piece) 
     let possible_pieces = match piece {
-        Piece::QUEEN => queen_targets(tgt_index, occupied) & my_pieces,
-        Piece::BISHOP => bishop_targets(tgt_index, occupied) & my_pieces,
-        Piece::KING => king_targets(tgt_index) & my_pieces,
-        Piece::ROOK => rook_targets(tgt_index, occupied) & my_pieces,
-        Piece::KNIGHT => knight_targets(tgt_index) & my_pieces,
+        Piece::QUEEN => queen_targets(tgt_index, occupied) & board.get_bb(Piece::QUEEN, colour),
+        Piece::BISHOP => bishop_targets(tgt_index, occupied) & board.get_bb(Piece::BISHOP, colour),
+        Piece::KING => king_targets(tgt_index) & board.get_bb(Piece::KING, colour),
+        Piece::ROOK => rook_targets(tgt_index, occupied) & board.get_bb(Piece::ROOK, colour),
+        Piece::KNIGHT => knight_targets(tgt_index) & board.get_bb(Piece::KNIGHT, colour),
         Piece::PAWN => {
             if colour == Colour::WHITE  {white_pawns_target_square(tgt_index, board.pw, opp_pieces, empty)}
             else                        {black_pawns_target_square(tgt_index, board.pb, opp_pieces, empty)}
@@ -132,7 +133,7 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
                 _ => return None,
             }
         }
-    };        
+    };
 
     return Some(Move{special_actions: special_action, org_square: org_index, tgt_square: tgt_index, piece: piece, colour: colour});
 }
