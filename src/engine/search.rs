@@ -28,24 +28,24 @@ fn evaluate(board : &Board) -> u64 {
     return white_material_value(board) * (popcount_swar(white(board)) - popcount_swar(black(board)));
 }
 
-pub fn negamax(depth: u64, board: Board) -> u64 {
-    if depth == 0 {
-        return evaluate(&board);
-    }
+// pub fn negamax(depth: u64, board: Board) -> u64 {
+//     if depth == 0 {
+//         return evaluate(&board);
+//     }
 
-    for move in moves {
+//     for move in moves {
         
-    }
+//     }
 
-}
+// }
 
-int negaMax( int depth ) {
-    if ( depth == 0 ) return evaluate();
-    int max = -oo;
-    for ( all moves)  {
-        score = -negaMax( depth - 1 );
-        if( score > max )
-            max = score;
-    }
-    return max;
-}
+// int negaMax( int depth ) {
+//     if ( depth == 0 ) return evaluate();
+//     int max = -oo;
+//     for ( all moves)  {
+//         score = -negaMax( depth - 1 );
+//         if( score > max )
+//             max = score;
+//     }
+//     return max;
+// }

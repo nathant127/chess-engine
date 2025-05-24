@@ -1,33 +1,25 @@
 use crate::board_rep::board::*;
-use crate::board_rep::constants::{Piece, RANK_1};
+use crate::board_rep::constants::{Piece, RANK_1, Colour};
 use crate::board_rep::bitboard::{self, bitscan_forward, popcount_loop, shift_northx};
+use super::game::{SpecialActions, Move};
 
-#[derive(Eq, PartialEq)]
-enum SpecialActions {
-    CASTLE,
-    LONG_CASTLE,
-    CHECK,
-    CHECKMATE,
-    CAPTURE,
-}
-#[derive(Eq, PartialEq)]
-enum Colour {
-    WHITE,
-    BLACK
+
+
+pub fn read_notation(board: &Board, colour: Colour) -> Option<Move>{
+    let mut buf: String = String::default();
+    let result = std::io::stdin().read_line(&mut buf);
+    match result {
+        Ok(_n) => {},
+        Err(err) => {
+            println!("Error when reading line: {err}");
+            return None;
+        },
+    }
+    return interpret_notation(buf, board, colour);
 }
 
-pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -> Option<([bool; 5], usize, usize)> {
+pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -> Option<Move> {
     let mut special_action: [bool; 5] = [false; 5];
-    // Castle checker
-    if notation == String::from("O-O") {
-        special_action[SpecialActions::CASTLE as usize] = true;
-        return Some((special_action, 0, 0));
-    }
-    // Long Castle checker
-    if notation == String::from("O-O-O") {
-        special_action[SpecialActions::LONG_CASTLE as usize] = true;
-        return Some((special_action, 0, 0));
-    }
 
     // Check for captures
     special_action[SpecialActions::CAPTURE as usize] = remove_match(&mut notation, 'x');
@@ -37,6 +29,17 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
 
     // Check for Checkmate
     special_action[SpecialActions::CHECKMATE as usize] = remove_match(&mut notation, '#');
+
+    // Castle checker
+    if notation == String::from("O-O") {
+        special_action[SpecialActions::CASTLE as usize] = true;
+        return Some(Move{special_actions: special_action, org_square: 0, tgt_square: 0, piece: Piece::KING, colour: colour});
+    }
+    // Long Castle checker
+    if notation == String::from("O-O-O") {
+        special_action[SpecialActions::LONG_CASTLE as usize] = true;
+        return Some(Move{special_actions: special_action, org_square: 0, tgt_square: 0, piece: Piece::KING, colour: colour});
+    }
 
     // Start parsing the string
     let mut it = notation.chars();
@@ -131,7 +134,7 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
         }
     };        
 
-    return Some((special_action, org_index, tgt_index));
+    return Some(Move{special_actions: special_action, org_square: org_index, tgt_square: tgt_index, piece: piece, colour: colour});
 }
 
 fn remove_match(str: &mut String, char: char) -> bool {

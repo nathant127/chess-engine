@@ -1,5 +1,6 @@
-use crate::board_rep::bitboard::*;
-use crate::board_rep::board::Board;
+use super::bitboard::*;
+use super::board::Board;
+use std::ops::Mul;
 
 pub const FILE_A: BitBoard = 0x0101010101010101;
 pub const FILE_H: BitBoard = 0x8080808080808080;
@@ -30,9 +31,52 @@ pub enum Square {
     A8, B8, C8, D8, E8, F8, G8, H8
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Piece {
     PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING
+}
+impl Mul<Colour> for Piece {
+    type Output = PieceColour;
+    fn mul(self: Self, rhs: Colour) -> Self::Output {
+        PieceColour::from_usize((self as usize) + (rhs as usize * 6))
+    }
+}
+
+#[derive(Eq, PartialEq, Clone, Copy)]
+pub enum Colour {
+    WHITE,
+    BLACK
+}
+impl Mul<Piece> for Colour {
+    type Output = PieceColour;
+    fn mul(self: Self, rhs: Piece) -> Self::Output {
+        PieceColour::from_usize((rhs as usize) + (self as usize * 6))
+    }
+}
+
+#[derive(Eq, PartialEq, Clone, Copy)]
+pub enum PieceColour {
+    WHITE_PAWN, WHITE_KNIGHT, WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, WHITE_KING,
+    BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING
+}
+impl PieceColour {
+    fn from_usize(num: usize) -> PieceColour {
+        match num {
+            0 => PieceColour::WHITE_PAWN,
+            1 => PieceColour::WHITE_KNIGHT,
+            2 => PieceColour::WHITE_BISHOP,
+            3 => PieceColour::WHITE_ROOK,
+            4 => PieceColour::WHITE_QUEEN,
+            5 => PieceColour::WHITE_KING,
+            6 => PieceColour::BLACK_PAWN,
+            7 => PieceColour::BLACK_KNIGHT,
+            8 => PieceColour::BLACK_BISHOP,
+            9 => PieceColour::BLACK_ROOK,
+            10 => PieceColour::BLACK_QUEEN,
+            11 => PieceColour::BLACK_KING,
+            _ => {panic!("Tried to convert to piececolour but no match was found")},
+        }
+    }
 }
 
 pub const INITIAL_BOARD: Board = Board {

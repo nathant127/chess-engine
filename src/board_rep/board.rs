@@ -1,25 +1,127 @@
-use crate::board_rep::bitboard::*;
-use crate::board_rep::constants::*;
+use super::bitboard::*;
+use super::constants::*;
+use std::ops::{BitAnd, BitOr};
 
-use super::bitboard;
 
 pub struct Board {
     pub pw: BitBoard,
-    pub rw: BitBoard,
     pub nw: BitBoard,
     pub bw: BitBoard,
+    pub rw: BitBoard,
     pub qw: BitBoard,
     pub kw: BitBoard,
+
     pub pb: BitBoard,
-    pub rb: BitBoard,
     pub nb: BitBoard,
     pub bb: BitBoard,
+    pub rb: BitBoard,
     pub qb: BitBoard,
-    pub kb: BitBoard
+    pub kb: BitBoard,
 }
 impl Default for Board {
     fn default() -> Board {
         INITIAL_BOARD
+    }
+}
+
+pub trait GetBitBoard {
+    fn get_bb(& self, piece: Piece, colour: Colour) -> BitBoard;
+}
+
+impl GetBitBoard for Board {
+    fn get_bb(&self, piece: Piece, colour: Colour) -> BitBoard {
+        let index: usize = (piece * colour) as usize;
+        match index {
+            0 => self.pw,
+            1 =>  self.nw,
+            2 =>  self.bw,
+            3 =>  self.rw,
+            4 =>  self.qw,
+            5 =>  self.kw,
+            6 =>  self.pw,
+            7 =>  self.nw,
+            8 =>  self.bw,
+            9 =>  self.rw,
+            10 => self.qw,
+            11 =>  self.kw,
+            _ => {panic!("Tried to get a bitboard that doesn't exist")}
+        }
+    }
+}
+
+pub trait GetBitBoardMut {
+    fn get_bb_mut(&mut self, piece: Piece, colour: Colour) -> &mut BitBoard;
+}
+
+impl GetBitBoardMut for Board {
+    fn get_bb_mut(&mut self, piece: Piece, colour: Colour) -> &mut BitBoard {
+        let index = (piece as u32) + (colour as u32 * 6);
+        match index {
+            0 => &mut self.pw,
+            1 => &mut self.nw,
+            2 => &mut self.bw,
+            3 => &mut self.rw,
+            4 => &mut self.qw,
+            5 => &mut self.kw,
+            6 => &mut self.pw,
+            7 => &mut self.nw,
+            8 => &mut self.bw,
+            9 => &mut self.rw,
+            10 => &mut self.qw,
+            11 => &mut self.kw,
+            _ => {panic!("Tried to get a bitboard that doesn't exist")}
+        }
+    }
+}
+
+impl BitAnd<BitBoard> for Board {
+    type Output = Self;
+    fn bitand(self, rhs: BitBoard) -> Self::Output {
+        Self {
+            pw: self.pw & rhs,
+            bw: self.bw & rhs,
+            nw: self.nw & rhs,
+            rw: self.rw & rhs,
+            qw: self.qw & rhs,
+            kw: self.kw & rhs,
+
+            pb: self.pb & rhs,
+            bb: self.bb & rhs,
+            nb: self.nb & rhs,
+            rb: self.rb & rhs,
+            qb: self.qb & rhs,
+            kb: self.kb & rhs,
+        }
+    }
+}
+
+impl BitOr<BitBoard> for Board {
+    type Output = Self;
+    fn bitor(self, rhs: BitBoard) -> Self::Output {
+        Self {
+            pw: self.pw | rhs,
+            bw: self.bw | rhs,
+            nw: self.nw | rhs,
+            rw: self.rw | rhs,
+            qw: self.qw | rhs,
+            kw: self.kw | rhs,
+
+            pb: self.pb | rhs,
+            bb: self.bb | rhs,
+            nb: self.nb | rhs,
+            rb: self.rb | rhs,
+            qb: self.qb | rhs,
+            kb: self.kb | rhs,
+        }
+    }
+}
+
+impl Board {
+    pub fn get_colour(self: &Self, colour: Colour) -> BitBoard {
+        match colour {
+            Colour::WHITE => white(self),
+            Colour::BLACK => black(self),
+        }
     }
 }
 
@@ -138,9 +240,10 @@ pub fn black_pawns_ableto_capture(black_pawns: BitBoard, white_pieces: BitBoard)
 }
 
 /** Returns all targets for a white pawn at the specified square including diagonal defended squares */
-pub fn white_pawn_targets(square: usize, occupied: BitBoard, empty: BitBoard) -> BitBoard {
+pub fn white_pawn_targets(square: usize, occupied: BitBoard) -> BitBoard {
     let mut bb = 0;
     let pos = 1<< square;
+    let empty = !occupied;
 
     bb |= white_pawn_captures(pos, occupied);
     bb |= white_pawn_push_targets(pos, empty);
@@ -148,9 +251,10 @@ pub fn white_pawn_targets(square: usize, occupied: BitBoard, empty: BitBoard) ->
     return bb;
 }
 /** Returns all targets for a black pawn at the specified square including diagonal defended squares */
-pub fn black_pawn_targets(square: usize, occupied: BitBoard, empty: BitBoard) -> BitBoard {
+pub fn black_pawn_targets(square: usize, occupied: BitBoard) -> BitBoard {
     let mut bb = 0;
     let pos = 1<< square;
+    let empty = !occupied;
 
     bb |= black_pawn_captures(pos, occupied);
     bb |= black_pawn_push_targets(pos, empty);
@@ -290,11 +394,19 @@ pub fn queen_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) ->
     return queen_targets(index, occupied) & opp_pieces;
 }
 
-pub fn square_targeted_by(square: usize, occupied: BitBoard, piece: Piece) -> BitBoard{
-    if piece == Piece::PAWN {
-
+/** Slow function, should not be used for search */
+pub fn targets(square: usize, piece: Piece, colour: Colour, occupied: BitBoard) -> BitBoard {
+    match piece {
+        Piece::QUEEN => queen_targets(square, occupied),
+        Piece::BISHOP => bishop_targets(square, occupied),
+        Piece::KING => king_targets(square),
+        Piece::ROOK => rook_targets(square, occupied),
+        Piece::KNIGHT => knight_targets(square),
+        Piece::PAWN => {
+            if colour == Colour::WHITE  {white_pawn_targets(square, occupied)}
+            else                        {black_pawn_targets(square, occupied)}
+        }
     }
-    targeting(square, occupied);
 }
 
 pub fn all_white_moves(board: &Board) -> [BitBoard; 64] {
