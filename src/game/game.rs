@@ -22,7 +22,7 @@ pub struct Move {
 
 pub fn print_board(board: &Board) {
     let mut char_arrs: [[char; 64]; 6] = [['0'; 64]; 6];
-    print!("{}[2J", 27 as char);
+    //print!("{}[2J", 27 as char);
 
     char_arrs[0] = fmt_bitboard_char(board.pw | board.pb, 'p');
     char_arrs[1] = fmt_bitboard_char(board.nw | board.nb, 'n');
@@ -74,6 +74,10 @@ pub fn execute_move(board: &mut Board, mov: &Move) {
     if is_move_valid(board, mov) == false {
         println!("Move is invalid");
         return;
+    }
+
+    if mov.special_actions[SpecialActions::CAPTURE as usize] == true {
+        *board = *board & !(1<<mov.tgt_square);
     }
 
     let piece_bb: &mut BitBoard = board.get_bb_mut(mov.piece, mov.colour);

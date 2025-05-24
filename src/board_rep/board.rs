@@ -4,6 +4,7 @@ use super::debug;
 use std::ops::{BitAnd, BitOr};
 
 
+#[derive(Clone, Copy)]
 pub struct Board {
     pub pw: BitBoard,
     pub nw: BitBoard,

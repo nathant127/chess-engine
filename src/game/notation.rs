@@ -135,6 +135,10 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
         }
     };
 
+    if (1<<tgt_index) & opp_pieces != 0 {
+        special_action[SpecialActions::CAPTURE as usize] = true;
+    }
+
     return Some(Move{special_actions: special_action, org_square: org_index, tgt_square: tgt_index, piece: piece, colour: colour});
 }
 

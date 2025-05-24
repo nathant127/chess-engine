@@ -1,6 +1,6 @@
 use super::bitboard::*;
 use super::board::Board;
-use std::ops::Mul;
+use std::ops::{Mul, Not};
 
 pub const FILE_A: BitBoard = 0x0101010101010101;
 pub const FILE_H: BitBoard = 0x8080808080808080;
@@ -51,6 +51,15 @@ impl Mul<Piece> for Colour {
     type Output = PieceColour;
     fn mul(self: Self, rhs: Piece) -> Self::Output {
         PieceColour::from_usize((rhs as usize) + (self as usize * 6))
+    }
+}
+impl Not for Colour {
+    type Output = Colour;
+    fn not(self: Self) -> Self::Output {
+        match self {
+            Colour::WHITE => Colour::BLACK,
+            Colour::BLACK => Colour::WHITE,
+        }
     }
 }
 
