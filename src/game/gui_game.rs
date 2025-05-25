@@ -19,6 +19,8 @@ use piston::input::{RenderArgs, RenderEvent, UpdateArgs, UpdateEvent};
 use piston::window::{WindowSettings};
 use piston::input::*;
 
+use include_assets::{NamedArchive, include_dir};
+
 use crate::board_rep::board::{self, Board};
 use crate::board_rep::constants::{Colour, Piece, PieceColour, Square};
 use crate::board_rep::bitboard::{self, rank, file};
@@ -57,8 +59,10 @@ impl ChessGame {
             .graphics_api(OPENGL)
             .exit_on_esc(true)
             .build()
-            .unwrap();
+            .expect("Failed to create window");
         window.set_lazy(true);
+
+        
 
         let mut game = ChessGame { 
             window: window,
@@ -83,18 +87,18 @@ impl ChessGame {
         
         let mut assets: Vec<Rc<G2dTexture>> = Vec::new();
 
-        assets.push(ChessGame::create_texture(&mut self.window, "white_pawn.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "white_knight.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "white_bishop.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "white_rook.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "white_queen.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "white_king.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "black_pawn.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "black_knight.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "black_bishop.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "black_rook.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "black_queen.png".to_string()));
-        assets.push(ChessGame::create_texture(&mut self.window, "black_king.png".to_string()));
+        assets.push(self.create_texture("white_pawn.png".to_string()));
+        assets.push(self.create_texture("white_knight.png".to_string()));
+        assets.push(self.create_texture("white_bishop.png".to_string()));
+        assets.push(self.create_texture("white_rook.png".to_string()));
+        assets.push(self.create_texture("white_queen.png".to_string()));
+        assets.push(self.create_texture("white_king.png".to_string()));
+        assets.push(self.create_texture("black_pawn.png".to_string()));
+        assets.push(self.create_texture("black_knight.png".to_string()));
+        assets.push(self.create_texture("black_bishop.png".to_string()));
+        assets.push(self.create_texture("black_rook.png".to_string()));
+        assets.push(self.create_texture("black_queen.png".to_string()));
+        assets.push(self.create_texture("black_king.png".to_string()));
 
         self.piece_textures = assets;
     }
@@ -126,13 +130,16 @@ impl ChessGame {
         }
     }
 
-    fn create_texture(window: &mut PistonWindow, fname: String ) -> Rc<G2dTexture>{
-        let asset_folder = find_folder::Search::ParentsThenKids(3, 3)
-            .for_folder("assets").unwrap();
+    fn create_texture(&mut self, fname: String ) -> Rc<G2dTexture>{
+        let asset_folder = match find_folder::Search::ParentsThenKids(3, 3)
+            .for_folder("assets") {
+                Ok(folder) => folder,
+                Err(e) => panic!("Failed to find asset folder with err: {:}", e),
+            };
 
         let mut texture_context = TextureContext {
-            factory: window.factory.clone(),
-            encoder: window.factory.create_command_buffer().into()
+            factory: self.window.factory.clone(),
+            encoder: self.window.factory.create_command_buffer().into()
         };
 
         Rc::new(Texture::from_path(
