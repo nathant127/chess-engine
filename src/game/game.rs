@@ -114,7 +114,7 @@ pub fn is_move_valid(board: &Board, mov: &Move) -> bool {
 
     let my_pieces = board.get_colour(mov.colour);
     let valid_moves = piece_targets & !my_pieces;
-
+    println!("huh");
     let can_piece_reach_target = valid_moves & (1<<mov.tgt_square) != 0;
     if !can_piece_reach_target
         {return false;}

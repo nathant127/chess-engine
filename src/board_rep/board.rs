@@ -25,6 +25,7 @@ impl Default for Board {
     }
 }
 
+// impl 
 pub trait GetBitBoard {
     fn get_bb(& self, piece: Piece, colour: Colour) -> BitBoard;
 }
@@ -39,12 +40,12 @@ impl GetBitBoard for Board {
             3 =>  self.rw,
             4 =>  self.qw,
             5 =>  self.kw,
-            6 =>  self.pw,
-            7 =>  self.nw,
-            8 =>  self.bw,
-            9 =>  self.rw,
-            10 => self.qw,
-            11 =>  self.kw,
+            6 =>  self.pb,
+            7 =>  self.nb,
+            8 =>  self.bb,
+            9 =>  self.rb,
+            10 => self.qb,
+            11 =>  self.kb,
             _ => {panic!("Tried to get a bitboard that doesn't exist")}
         }
     }
@@ -64,12 +65,12 @@ impl GetBitBoardMut for Board {
             3 => &mut self.rw,
             4 => &mut self.qw,
             5 => &mut self.kw,
-            6 => &mut self.pw,
-            7 => &mut self.nw,
-            8 => &mut self.bw,
-            9 => &mut self.rw,
-            10 => &mut self.qw,
-            11 => &mut self.kw,
+            6 => &mut self.pb,
+            7 => &mut self.nb,
+            8 => &mut self.bb,
+            9 => &mut self.rb,
+            10 => &mut self.qb,
+            11 => &mut self.kb,
             _ => {panic!("Tried to get a bitboard that doesn't exist")}
         }
     }
