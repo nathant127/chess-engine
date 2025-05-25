@@ -258,6 +258,7 @@ dependencies = [
  "piston2d-sprite",
  "piston_window",
  "pistoncore-glutin_window",
+ "uuid",
 ]
 
 [[package]]

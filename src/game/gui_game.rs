@@ -6,6 +6,7 @@ extern crate piston;
 extern crate find_folder;
 extern crate sprite;
 extern crate piston_window;
+extern crate uuid;
 
 use piston_window::*;
 use sprite::*;
@@ -19,8 +20,17 @@ use piston::window::{WindowSettings};
 use piston::input::*;
 
 use crate::board_rep::board::{self, Board};
-use crate::board_rep::constants::{Piece, Colour, Square};
+use crate::board_rep::constants::{Colour, Piece, PieceColour, Square};
 use crate::board_rep::bitboard::{self, rank, file};
+
+use uuid::Uuid;
+
+struct SceneMetaData {
+    id: Uuid,
+    piece: Piece,
+    colour: Colour,
+    square: usize,
+}
 
 type Rectangle = [f64;4];
 pub struct ChessGame {
@@ -32,9 +42,11 @@ pub struct ChessGame {
     window_size: [f64; 2],
     piece_textures: Vec<Rc<G2dTexture>>,
     scene: Scene<G2dTexture>,
+    scene_metadata: Vec<SceneMetaData>
 }
 
 const OPENGL: OpenGL = OpenGL::V3_2;
+const SQUARE_SIZE: f64 = 100.0;
 
 impl ChessGame {
     fn make_game() -> ChessGame {
@@ -45,49 +57,69 @@ impl ChessGame {
             .unwrap();
         window.set_lazy(true);
 
-        
-        
-        let piece_textures = ChessGame::get_piece_textures(&mut window);
-        let scene = ChessGame::create_scene(&piece_textures);
-        ChessGame { 
+        let mut game = ChessGame { 
             window: window,
             board: Board::default(), 
             cursor: [0.0, 0.0], 
             highlights: [false; 64], 
             squares: ChessGame::init_board_squares(),
             window_size: [0.0, 0.0],
-            piece_textures: piece_textures,
-            scene: scene,
-        }
+            piece_textures: Vec::new(),
+            scene: Scene::new(),
+            scene_metadata: Vec::new()
+        };
+
+        game.create_textures();
+        game.create_initial_scene();
+
+        return game;
     }
 
-    fn get_piece_textures(window: &mut PistonWindow) -> Vec<Rc<G2dTexture>> {
+    fn create_textures(&mut self) {
         
         let mut assets: Vec<Rc<G2dTexture>> = Vec::new();
 
-        assets.push(ChessGame::create_texture(window, "white_pawn.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "white_knight.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "white_bishop.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "white_rook.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "white_queen.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "white_king.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "black_pawn.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "black_knight.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "black_bishop.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "black_rook.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "black_queen.png".to_string()));
-        assets.push(ChessGame::create_texture(window, "black_king.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "white_pawn.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "white_knight.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "white_bishop.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "white_rook.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "white_queen.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "white_king.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "black_pawn.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "black_knight.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "black_bishop.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "black_rook.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "black_queen.png".to_string()));
+        assets.push(ChessGame::create_texture(&mut self.window, "black_king.png".to_string()));
 
-        return assets;
+        self.piece_textures = assets;
     }
 
-    fn create_scene(textures: &Vec<Rc<G2dTexture>>) -> Scene<G2dTexture> {
-        let mut scene = Scene::new();
+    fn create_initial_scene(&mut self){
+        self.fill_scene_piece(self.board.pw, 0, Piece::Pawn, Colour::White);
+        self.fill_scene_piece(self.board.nw, 1, Piece::Knight, Colour::White);
+        self.fill_scene_piece(self.board.bw, 2, Piece::Bishop, Colour::White);
+        self.fill_scene_piece(self.board.rw, 3, Piece::Rook, Colour::White);
+        self.fill_scene_piece(self.board.qw, 4, Piece::Queen, Colour::White);
+        self.fill_scene_piece(self.board.kw, 5, Piece::King, Colour::White);
 
-        for tex in textures {
-            scene.add_child(Sprite::from_texture(tex.clone()));
+        self.fill_scene_piece(self.board.pb, 6, Piece::Pawn, Colour::Black);
+        self.fill_scene_piece(self.board.nb, 7, Piece::Knight, Colour::Black);
+        self.fill_scene_piece(self.board.bb, 8, Piece::Bishop, Colour::Black);
+        self.fill_scene_piece(self.board.rb, 9, Piece::Rook, Colour::Black);
+        self.fill_scene_piece(self.board.qb, 10, Piece::Queen, Colour::Black);
+        self.fill_scene_piece(self.board.kb, 11, Piece::King, Colour::Black);
+        
+    }
+
+    fn fill_scene_piece(&mut self, mut bb: u64, tex_index: usize, piece: Piece, colour: Colour) {
+        while bb != 0 {
+            let index = bitboard::pop(&mut bb);
+            let mut sprite = Sprite::from_texture(self.piece_textures[tex_index].clone());
+            sprite.set_position(self.squares[index][0] + SQUARE_SIZE/2.0, self.squares[index][1] + SQUARE_SIZE/2.0);
+            let id = self.scene.add_child(sprite);
+            self.scene_metadata.push(SceneMetaData { id: id, piece: piece, colour: colour, square: index });
         }
-        return scene;
     }
 
     fn create_texture(window: &mut PistonWindow, fname: String ) -> Rc<G2dTexture>{
@@ -148,6 +180,8 @@ impl ChessGame {
                 rectangle(colour, self.squares[i],  transform, g);
                 i+=1;
             }
+
+            self.scene.draw(transform, g);
         });
 
     }
@@ -205,7 +239,6 @@ impl ChessGame {
 
     fn init_board_squares() -> [Rectangle; 64] {
         let mut squares: [Rectangle; 64] = [[0.0; 4]; 64];
-        const SQUARE_SIZE: f64 = 100.0;
         const BOARD_SIZE: f64 = SQUARE_SIZE * 8.0;
         
 

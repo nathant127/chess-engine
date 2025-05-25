@@ -12,3 +12,5 @@ find_folder = "*"
 
 piston_window = "*"
 piston2d-sprite = "0.68.0"
+
+uuid = "*"
