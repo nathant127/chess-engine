@@ -11,3 +11,4 @@ pistoncore-glutin_window = "0.72.0"
 find_folder = "*"
 
 piston_window = "*"
+piston2d-sprite = "0.68.0"
