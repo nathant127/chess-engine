@@ -410,6 +410,33 @@ pub fn targets(square: usize, piece: Piece, colour: Colour, occupied: BitBoard) 
     }
 }
 
+pub fn legal_targets(square: usize, piece: Piece, colour: Colour, board: &Board) -> BitBoard {
+    let occupied = all(board);
+    let mut psudeo_targets = targets(square, piece, colour, occupied);
+    psudeo_targets &= !board.get_colour(colour);
+    return psudeo_targets;
+}
+
+pub fn get_piece_at_square(square: usize, mut board: Board) -> Option<(Piece, Colour)> {
+    let square_bb: u64 = 1<<square;
+    board = board & square_bb;
+
+    let colour = match white(&board) {
+        0 => Colour::Black,
+        _ => Colour::White,
+    };
+    let piece = if board.pw | board.pb != 0 {Piece::Pawn}
+    else if board.nw | board.nb != 0 {Piece::Knight}
+    else if board.bw | board.bb != 0 {Piece::Bishop}
+    else if board.rw | board.rb != 0 {Piece::Rook}
+    else if board.qw | board.qb != 0 {Piece::Queen}
+    else if board.kw | board.kb != 0 {Piece::King}
+    else {return None};
+
+    
+    return Some((piece, colour));
+}
+
 pub fn all_white_moves(board: &Board) -> [BitBoard; 64] {
     let mut moves: [BitBoard; 64] = [0; 64];
     let occupied: u64 = all(board);

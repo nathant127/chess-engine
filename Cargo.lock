@@ -245,6 +245,7 @@ dependencies = [
 name = "chess-engine"
 version = "0.1.0"
 dependencies = [
+ "find_folder",
  "piston",
  "piston2d-graphics",
  "piston2d-opengl_graphics",
@@ -403,6 +404,12 @@ checksum = "1e6853b52649d4ac5c0bd02320cddc5ba956bdb407c4b75a2c6b75bf51500f8c"
 dependencies = [
  "simd-adler32",
 ]
+
+[[package]]
+name = "find_folder"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f6d018fb95a0b59f854aed68ecd96ce2b80af7911b92b1fed3c4b1fa516b91b"
 
 [[package]]
 name = "flate2"
