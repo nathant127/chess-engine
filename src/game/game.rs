@@ -9,11 +9,11 @@ pub enum SpecialActions {
     Check,
     CheckMate,
     Capture,
+    Promotion,
 }
 
 #[derive(Eq, PartialEq)]
 pub struct Move {
-    pub special_actions: [bool; 5],
     pub org_square: usize,
     pub tgt_square: usize,
     pub piece: Piece,
@@ -23,7 +23,6 @@ pub struct Move {
 impl Default for Move {
     fn default() -> Self {
         Self {
-            special_actions: [false; 5],
             org_square: 0,
             tgt_square: 0,
             piece: Piece::Pawn,
@@ -82,19 +81,25 @@ pub fn fmt_bitboard_char(board: BitBoard, disp_char: char) -> [char; 64]{
 }
 
 
-pub fn execute_move(board: &mut Board, mov: &Move) {
+pub fn execute_move(board: &mut Board, mov: &Move) -> Option<[bool; 6]> {
     if is_move_valid(board, mov) == false {
         println!("Move is invalid");
-        return;
+        return None;
+    }
+    let mut special_actions = [false; 6];
+    let mut board_copy: Board = *board;
+    board_copy = board_copy & (1<<mov.tgt_square);
+    if all(&board_copy) != 0 {
+        special_actions[SpecialActions::Capture as usize] = true;
     }
 
-    if mov.special_actions[SpecialActions::Capture as usize] == true {
-        *board = *board & !(1<<mov.tgt_square);
-    }
+    *board = *board & !(1<<mov.tgt_square);
 
     let piece_bb: &mut BitBoard = board.get_bb_mut(mov.piece, mov.colour);
     *piece_bb &= !(1<<mov.org_square);
     *piece_bb |= 1<<mov.tgt_square;
+
+    return Some(special_actions);
 }
 
 pub fn is_move_valid(board: &Board, mov: &Move) -> bool {
