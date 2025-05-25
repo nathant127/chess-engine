@@ -4,8 +4,12 @@ use chess_engine::board_rep::constants::*;
 use chess_engine::game::notation::read_notation;
 use chess_engine::game::game::*;
 
+use chess_engine::game::gui_game::run_game;
+
 fn main() {
     
+    run_game();
+
     let mut board: Board = INITIAL_BOARD;
     loop {
         print_board(&board);

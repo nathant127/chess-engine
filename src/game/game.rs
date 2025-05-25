@@ -20,6 +20,18 @@ pub struct Move {
     pub colour: Colour,
 }
 
+impl Default for Move {
+    fn default() -> Self {
+        Self {
+            special_actions: [false; 5],
+            org_square: 0,
+            tgt_square: 0,
+            piece: Piece::Pawn,
+            colour: Colour::White,
+        }
+    }
+}
+
 pub fn print_board(board: &Board) {
     let mut char_arrs: [[char; 64]; 6] = [['0'; 64]; 6];
     //print!("{}[2J", 27 as char);

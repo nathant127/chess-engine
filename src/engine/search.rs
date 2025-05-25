@@ -1,5 +1,13 @@
 use crate::board_rep::{bitboard::{popcount_loop, popcount_swar}, board::*};
-use crate::board_rep::constants::Piece;
+use crate::board_rep::constants::{Colour, Piece};
+use crate::game::game::Move;
+
+#[derive(PartialEq, Eq)]
+struct SimpleMoves {
+    word: Vec<u8>,
+    org_square: Vec<u64>,
+    tgt_square: Vec<u64>,
+}
 
 const PIECE_VALUE: [u64; 6] = [1, 3, 3, 5, 9, 0];
 
@@ -28,16 +36,37 @@ fn evaluate(board : &Board) -> u64 {
     return white_material_value(board) * (popcount_swar(white(board)) - popcount_swar(black(board)));
 }
 
-// pub fn negamax(depth: u64, board: Board) -> u64 {
-//     if depth == 0 {
-//         return evaluate(&board);
-//     }
+fn get_all_moves(board: &Board, colour: Colour) -> SimpleMoves {
 
-//     for move in moves {
+    return SimpleMoves { word: Vec::new(), org_square: Vec::new(), tgt_square: Vec::new() }
+}
+
+pub fn search_best_move(board: &Board) -> Move {
+    let mut mov: Move = Move::default();
+
+    let moves = get_all_moves(board, Colour::White);
+
+    let mut i = 0;
+    while i < moves.word.len() {
+
+    }
+    let best_move = negamax(3, *board);
+
+    return mov; 
+}
+
+fn negamax(depth: u64, board: Board) -> u64 {
+    // if depth == 0 {
+    //     return evaluate(&board);
+    // }
+
+    // let mut 
+
+    // for move in moves {
         
-//     }
-
-// }
+    // }
+    return 0;
+}
 
 // int negaMax( int depth ) {
 //     if ( depth == 0 ) return evaluate();
