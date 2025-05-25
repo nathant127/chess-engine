@@ -17,3 +17,5 @@ target/
 #.idea/
 
 .vscode
+chess_engine_release/
+*.zip

@@ -12,19 +12,15 @@ use piston_window::*;
 use sprite::*;
 use std::rc::Rc;
 
-use opengl_graphics::{GlGraphics, OpenGL};
-use graphics::ImageSize;
+use opengl_graphics::OpenGL;
 
-use piston::input::{RenderArgs, RenderEvent, UpdateArgs, UpdateEvent};
-use piston::window::{WindowSettings};
-use piston::input::*;
-
-use include_assets::{NamedArchive, include_dir};
+use piston::input::RenderEvent;
+use piston::window::WindowSettings;
 
 use crate::board_rep::board::{self, Board};
-use crate::board_rep::constants::{Colour, Piece, PieceColour, Square};
+use crate::board_rep::constants::{Colour, Piece};
 use crate::board_rep::bitboard::{self, rank, file};
-use crate::game::game::{self, SpecialActions};
+use crate::game::game::{self};
 
 use uuid::Uuid;
 
@@ -59,7 +55,7 @@ impl ChessGame {
             .graphics_api(OPENGL)
             .exit_on_esc(true)
             .build()
-            .expect("Failed to create window");
+            .expect("Failed to create piston window");
         window.set_lazy(true);
 
         
