@@ -507,7 +507,23 @@ pub fn legal_targets(square: usize, piece: Piece, colour: Colour, board: &Board)
     let mut psudeo_targets = targets(square, piece, colour, occupied);
     psudeo_targets &= !board.get_colour(colour);
 
-    if !is_check(board) {return psudeo_targets;}
+    if !is_check(board) {
+        let mut board_minus_selected = *board;
+        board_minus_selected = board_minus_selected & !(1<<square);
+        if !is_check(&board_minus_selected) {return psudeo_targets;}
+        let attacking_pieces = match colour {
+            Colour::White => white_in_check(&board_minus_selected),
+            Colour::Black => black_in_check(&board_minus_selected),
+        };
+        let king_square = match colour {
+            Colour::White => bitscan_forward(board.kw),
+            Colour::Black => bitscan_forward(board.kb),
+        };
+        let ray = in_between(king_square, bitscan_forward(attacking_pieces));
+        let legal_targets = (ray | attacking_pieces) & psudeo_targets;
+
+        return legal_targets;
+    }
     
     if piece == Piece::King {
         return match colour {
