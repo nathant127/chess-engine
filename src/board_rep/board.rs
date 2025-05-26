@@ -463,9 +463,6 @@ pub fn legal_white_king_targets(square: usize, board: &Board) -> BitBoard {
     let friendly_pieces = white(board);
     let opp_pieces = !friendly_pieces;
     let mut psudeo_king_moves = KING_TARGETS[square] & opp_pieces;
-    let king_attackers = white_in_check(board);
-
-    if king_attackers == 0 {return psudeo_king_moves;}
 
     let mut legal_king_moves = 0;
     while psudeo_king_moves != 0 {
@@ -480,9 +477,6 @@ pub fn legal_black_king_targets(square: usize, board: &Board) -> BitBoard {
     let friendly_pieces = black(board);
     let opp_pieces = !friendly_pieces;
     let mut psudeo_king_moves = KING_TARGETS[square] & opp_pieces;
-    let king_attackers = black_in_check(board);
-
-    if king_attackers == 0 {return psudeo_king_moves;}
 
     let mut legal_king_moves = 0;
     while psudeo_king_moves != 0 {
@@ -507,6 +501,13 @@ pub fn legal_targets(square: usize, piece: Piece, colour: Colour, board: &Board)
     let mut psudeo_targets = targets(square, piece, colour, occupied);
     psudeo_targets &= !board.get_colour(colour);
 
+    if piece == Piece::King {
+        return match colour {
+            Colour::White => legal_white_king_targets(square, board),
+            Colour::Black => legal_black_king_targets(square, board),
+        };
+    }
+
     if !is_check(board) {
         let mut board_minus_selected = *board;
         board_minus_selected = board_minus_selected & !(1<<square);
@@ -523,13 +524,6 @@ pub fn legal_targets(square: usize, piece: Piece, colour: Colour, board: &Board)
         let legal_targets = (ray | attacking_pieces) & psudeo_targets;
 
         return legal_targets;
-    }
-    
-    if piece == Piece::King {
-        return match colour {
-            Colour::White => legal_white_king_targets(square, board),
-            Colour::Black => legal_black_king_targets(square, board),
-        };
     }
 
     let attacking_pieces = match colour {
