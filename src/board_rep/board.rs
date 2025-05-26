@@ -353,47 +353,47 @@ fn get_ray_targets_neg(occupied: BitBoard, dir: usize, index: usize) -> BitBoard
     return ray;
 }
 
-pub fn rook_targets(index: usize, occupied: BitBoard) -> BitBoard {
+pub fn rook_targets(square: usize, occupied: BitBoard) -> BitBoard {
     let mut targets = 0;
-    targets |= get_ray_targets_pos(occupied, RayDir::N as usize, index);
-    targets |= get_ray_targets_pos(occupied, RayDir::E as usize, index);
-    targets |= get_ray_targets_neg(occupied, RayDir::S as usize, index);
-    targets |= get_ray_targets_neg(occupied, RayDir::W as usize, index);
+    targets |= get_ray_targets_pos(occupied, RayDir::N as usize, square);
+    targets |= get_ray_targets_pos(occupied, RayDir::E as usize, square);
+    targets |= get_ray_targets_neg(occupied, RayDir::S as usize, square);
+    targets |= get_ray_targets_neg(occupied, RayDir::W as usize, square);
     return targets;
 }
 #[inline]
-pub fn rook_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
-    return rook_targets(index, occupied) & opp_pieces;
+pub fn rook_captures(square: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
+    return rook_targets(square, occupied) & opp_pieces;
 }
 
-pub fn bishop_targets(index: usize, occupied: BitBoard) -> BitBoard {
+pub fn bishop_targets(square: usize, occupied: BitBoard) -> BitBoard {
     let mut targets = 0;
-    targets |= get_ray_targets_pos(occupied, RayDir::NE as usize, index);
-    targets |= get_ray_targets_pos(occupied, RayDir::NW as usize, index);
-    targets |= get_ray_targets_neg(occupied, RayDir::SE as usize, index);
-    targets |= get_ray_targets_neg(occupied, RayDir::SW as usize, index);
+    targets |= get_ray_targets_pos(occupied, RayDir::NE as usize, square);
+    targets |= get_ray_targets_pos(occupied, RayDir::NW as usize, square);
+    targets |= get_ray_targets_neg(occupied, RayDir::SE as usize, square);
+    targets |= get_ray_targets_neg(occupied, RayDir::SW as usize, square);
     return targets;
 }
 #[inline]
-pub fn bishop_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
-    return bishop_targets(index, occupied) & opp_pieces;
+pub fn bishop_captures(square: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
+    return bishop_targets(square, occupied) & opp_pieces;
 }
 
-pub fn queen_targets(index: usize, occupied: BitBoard) -> BitBoard {
+pub fn queen_targets(square: usize, occupied: BitBoard) -> BitBoard {
     let mut targets = 0;
-    targets |= get_ray_targets_pos(occupied, RayDir::N as usize, index);
-    targets |= get_ray_targets_pos(occupied, RayDir::E as usize, index);
-    targets |= get_ray_targets_neg(occupied, RayDir::S as usize, index);
-    targets |= get_ray_targets_neg(occupied, RayDir::W as usize, index);
-    targets |= get_ray_targets_pos(occupied, RayDir::NE as usize, index);
-    targets |= get_ray_targets_pos(occupied, RayDir::NW as usize, index);
-    targets |= get_ray_targets_neg(occupied, RayDir::SE as usize, index);
-    targets |= get_ray_targets_neg(occupied, RayDir::SW as usize, index);
+    targets |= get_ray_targets_pos(occupied, RayDir::N as usize, square);
+    targets |= get_ray_targets_pos(occupied, RayDir::E as usize, square);
+    targets |= get_ray_targets_neg(occupied, RayDir::S as usize, square);
+    targets |= get_ray_targets_neg(occupied, RayDir::W as usize, square);
+    targets |= get_ray_targets_pos(occupied, RayDir::NE as usize, square);
+    targets |= get_ray_targets_pos(occupied, RayDir::NW as usize, square);
+    targets |= get_ray_targets_neg(occupied, RayDir::SE as usize, square);
+    targets |= get_ray_targets_neg(occupied, RayDir::SW as usize, square);
     return targets;
 }
 #[inline]
-pub fn queen_captures(index: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
-    return queen_targets(index, occupied) & opp_pieces;
+pub fn queen_captures(square: usize, occupied: BitBoard, opp_pieces: BitBoard) -> BitBoard {
+    return queen_targets(square, occupied) & opp_pieces;
 }
 
 /** Slow function, should not be used for search */
@@ -416,6 +416,26 @@ pub fn legal_targets(square: usize, piece: Piece, colour: Colour, board: &Board)
     let mut psudeo_targets = targets(square, piece, colour, occupied);
     psudeo_targets &= !board.get_colour(colour);
     return psudeo_targets;
+}
+
+/** Returns a bitboard of all pieces that target the specified square (Friendly & Opp) */
+pub fn pieces_target_square(square: usize, board: &Board) -> BitBoard {
+    let mut bb = 0;
+    let occupied = all(board);
+
+    let mut rooks_and_queens = board.qw | board.qb; 
+    let mut bishops_and_queens = rooks_and_queens;
+    rooks_and_queens |= board.rw | board.rb;
+    bishops_and_queens |= board.bw | board.bb;
+
+    bb |= WHITE_PAWN_ATTACKS[square] & board.pb;
+    bb |= BLACK_PAWN_ATTACKS[square] & board.pw;
+    bb |= KNIGHT_TARGETS[square] & (board.nw | board.nb);
+    bb |= KING_TARGETS[square] & (board.kw | board.kb);
+    bb |= bishop_targets(square, occupied) & bishops_and_queens;
+    bb |= rook_targets(square, occupied) & rooks_and_queens;
+
+    return bb;
 }
 
 pub fn get_piece_at_square(square: usize, mut board: Board) -> Option<(Piece, Colour)> {
