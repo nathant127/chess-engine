@@ -27,15 +27,13 @@ use uuid::Uuid;
 
 struct SceneMetaData {
     id: Uuid,
-    piece: Piece,
-    colour: Colour,
     square: usize,
 }
 
 type Rectangle = [f64;4];
 pub struct ChessGame {
     window: PistonWindow,
-    piece_textures: Vec<Rc<G2dTexture>>,
+    res_man: ResourceManager,
     scene: Scene<G2dTexture>,
     scene_metadata: Vec<SceneMetaData>,
     cursor: [f64; 2],
@@ -64,9 +62,6 @@ impl ChessGame {
             encoder: window.factory.create_command_buffer().into()
         };
 
-        let mut res_manager: ResourceManager = ResourceManager::new(texture_context);
-        let _ = res_manager.add_folder("assets");
-
         let mut game = ChessGame { 
             window: window,
             board: Board::default(), 
@@ -74,62 +69,42 @@ impl ChessGame {
             highlights: [false; 64], 
             squares: ChessGame::init_board_squares(),
             window_size: [0.0, 0.0],
-            piece_textures: Vec::new(),
+            res_man: ResourceManager::new(texture_context),
             scene: Scene::new(),
             scene_metadata: Vec::new(),
             selected_piece: None,
         };
         
-        game.create_textures();
+        game.res_man.add_folder("assets");
         game.create_initial_scene();
 
         return game;
     }
 
-    fn create_textures(&mut self) {
-        
-        let mut assets: Vec<Rc<G2dTexture>> = Vec::new();
-
-        assets.push(self.create_texture("white_pawn.png".to_string()));
-        assets.push(self.create_texture("white_knight.png".to_string()));
-        assets.push(self.create_texture("white_bishop.png".to_string()));
-        assets.push(self.create_texture("white_rook.png".to_string()));
-        assets.push(self.create_texture("white_queen.png".to_string()));
-        assets.push(self.create_texture("white_king.png".to_string()));
-        assets.push(self.create_texture("black_pawn.png".to_string()));
-        assets.push(self.create_texture("black_knight.png".to_string()));
-        assets.push(self.create_texture("black_bishop.png".to_string()));
-        assets.push(self.create_texture("black_rook.png".to_string()));
-        assets.push(self.create_texture("black_queen.png".to_string()));
-        assets.push(self.create_texture("black_king.png".to_string()));
-
-        self.piece_textures = assets;
-    }
-
     fn create_initial_scene(&mut self){
-        self.fill_scene_piece(self.board.pw, 0, Piece::Pawn, Colour::White);
-        self.fill_scene_piece(self.board.nw, 1, Piece::Knight, Colour::White);
-        self.fill_scene_piece(self.board.bw, 2, Piece::Bishop, Colour::White);
-        self.fill_scene_piece(self.board.rw, 3, Piece::Rook, Colour::White);
-        self.fill_scene_piece(self.board.qw, 4, Piece::Queen, Colour::White);
-        self.fill_scene_piece(self.board.kw, 5, Piece::King, Colour::White);
+        self.fill_scene_piece(self.board.pw, "white_pawn.png");
+        self.fill_scene_piece(self.board.nw, "white_knight.png");
+        self.fill_scene_piece(self.board.bw, "white_bishop.png");
+        self.fill_scene_piece(self.board.rw, "white_rook.png");
+        self.fill_scene_piece(self.board.qw, "white_queen.png");
+        self.fill_scene_piece(self.board.kw, "white_king.png");
 
-        self.fill_scene_piece(self.board.pb, 6, Piece::Pawn, Colour::Black);
-        self.fill_scene_piece(self.board.nb, 7, Piece::Knight, Colour::Black);
-        self.fill_scene_piece(self.board.bb, 8, Piece::Bishop, Colour::Black);
-        self.fill_scene_piece(self.board.rb, 9, Piece::Rook, Colour::Black);
-        self.fill_scene_piece(self.board.qb, 10, Piece::Queen, Colour::Black);
-        self.fill_scene_piece(self.board.kb, 11, Piece::King, Colour::Black);
-        
+        self.fill_scene_piece(self.board.pb, "black_pawn.png");
+        self.fill_scene_piece(self.board.nb, "black_knight.png");
+        self.fill_scene_piece(self.board.bb, "black_bishop.png");
+        self.fill_scene_piece(self.board.rb, "black_rook.png");
+        self.fill_scene_piece(self.board.qb, "black_queen.png");
+        self.fill_scene_piece(self.board.kb, "black_king.png");
     }
 
-    fn fill_scene_piece(&mut self, mut bb: u64, tex_index: usize, piece: Piece, colour: Colour) {
-        while bb != 0 {
-            let index = bitboard::pop(&mut bb);
-            let mut sprite = Sprite::from_texture(self.piece_textures[tex_index].clone());
+    fn fill_scene_piece(&mut self, mut bitboard: u64, tex_name: &str) {
+        let tex = self.res_man.get_texture(tex_name);
+        while bitboard != 0 {
+            let index = bitboard::pop(&mut bitboard);
+            let mut sprite = Sprite::from_texture(tex.clone());
             sprite.set_position(self.squares[index][0] + SQUARE_SIZE/2.0, self.squares[index][1] + SQUARE_SIZE/2.0);
             let id = self.scene.add_child(sprite);
-            self.scene_metadata.push(SceneMetaData { id: id, piece: piece, colour: colour, square: index });
+            self.scene_metadata.push(SceneMetaData { id: id, square: index });
         }
     }
 
