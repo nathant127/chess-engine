@@ -16,6 +16,7 @@ use opengl_graphics::OpenGL;
 use piston::input::RenderEvent;
 use piston::window::WindowSettings;
 
+use crate::board_rep;
 use crate::board_rep::board::{self, Board};
 use crate::board_rep::constants::{Colour, Piece};
 use crate::board_rep::bitboard::{self, rank, file};
@@ -293,7 +294,7 @@ impl ChessGame {
 pub fn run_game() {
     // Change this to OpenGL::V2_1 if not working.
     
-    
+    board_rep::debug::print_bitboard(board_rep::constants::IN_BETWEEN_RAY[3][12]);
 
     // Create a new game and run it.
     let mut game = ChessGame::make_game();

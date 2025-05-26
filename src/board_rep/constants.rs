@@ -131,6 +131,8 @@ pub enum RayDir {
 }
 pub const RAY_TARGETS: [[u64; 64]; 8] = init_ray_targets();
 
+pub const IN_BETWEEN_RAY: [[u64; 64]; 64] = init_in_between_ray();
+
 const fn init_wpawn_attacks() -> [u64; 64] {
     let mut arr: [u64; 64] = [0; 64];
     let mut i: usize = 0;
@@ -271,6 +273,35 @@ const fn init_ray_targets() -> [[u64; 64]; 8] {
 
         i += 1;
     }
+    return arr;
+}
+
+const fn init_in_between_ray() -> [[u64; 64]; 64] {
+    let mut arr = [[0; 64]; 64];
+
+    let mut sq1 = 0;
+    while sq1 < arr.len() {
+        let mut sq2 = 0;
+        while sq2 < arr[0].len() {
+            const M1: u64   = u64::MAX;
+            const A2A7: u64 = 0x0001010101010100;
+            const B2G7: u64 = 0x0040201008040200;
+            const H1B7: u64 = 0x0002040810204080; /* Thanks Dustin, g2b7 did not work for c1-a3 */
+
+            let btwn: u64  = (M1 << sq1) ^ (M1 << sq2);
+            let file: u64  =   (sq2 as u64 & 7).wrapping_sub(sq1 as u64 & 7);
+            let rank: u64  =  ((sq2 as u64 | 7).wrapping_sub(sq1 as u64)) >> 3 ;
+            let mut line: u64 = ((file  &  7).wrapping_sub(1)) & A2A7; /* a2a7 if same file */
+            line += 2 * (((rank  &  7).wrapping_sub(1)) >> 58); /* b1g1 if same rank */
+            line += (((rank.wrapping_sub(file)) & 15).wrapping_sub(1)) & B2G7; /* b2g7 if same diagonal */
+            line += (((rank.wrapping_add(file)) & 15).wrapping_sub(1)) & H1B7; /* h1b7 if same antidiag */
+            line = line.wrapping_mul(btwn & btwn.wrapping_neg()); /* mul acts like shift by smaller square */
+            arr[sq1][sq2] = line & btwn;
+            sq2 += 1;
+        }
+        sq1 += 1;
+    }    
+
     return arr;
 }
 

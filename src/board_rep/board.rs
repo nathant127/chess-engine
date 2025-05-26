@@ -1,3 +1,5 @@
+use graphics::color::BLACK;
+
 use super::bitboard::*;
 use super::constants::*;
 use std::ops::{BitAnd, BitOr};
@@ -411,13 +413,6 @@ pub fn targets(square: usize, piece: Piece, colour: Colour, occupied: BitBoard) 
     }
 }
 
-pub fn legal_targets(square: usize, piece: Piece, colour: Colour, board: &Board) -> BitBoard {
-    let occupied = all(board);
-    let mut psudeo_targets = targets(square, piece, colour, occupied);
-    psudeo_targets &= !board.get_colour(colour);
-    return psudeo_targets;
-}
-
 /** Returns a bitboard of all pieces that target the specified square (Friendly & Opp) */
 pub fn pieces_target_square(square: usize, board: &Board) -> BitBoard {
     let mut bb = 0;
@@ -437,6 +432,159 @@ pub fn pieces_target_square(square: usize, board: &Board) -> BitBoard {
 
     return bb;
 }
+
+pub fn attacking_king(board: &Board, colour: Colour) -> BitBoard {
+    let king_square = match colour {
+        Colour::White => bitscan_forward(board.kw),
+        Colour::Black => bitscan_forward(board.kb),
+    };
+    return pieces_target_square(king_square, board) & board.get_colour(!colour);
+}
+
+/** Returns a bitboard of all black pieces that can attack the white king */
+#[inline]
+pub fn white_in_check(board: &Board) -> BitBoard {
+    let king_square = bitscan_forward(board.kw);
+    return pieces_target_square(king_square, board) & black(board);
+}
+/** Returns a bitboard of all white pieces that can attack the black king */
+#[inline]
+pub fn black_in_check(board: &Board) -> BitBoard {
+    let king_square = bitscan_forward(board.kb);
+    return pieces_target_square(king_square, board) & white(board);
+}
+#[inline]
+pub fn is_check(board: &Board) -> bool {
+    return white_in_check(board) | black_in_check(board) != 0;
+}
+
+/** Returns all moves that the white king can make legally */
+pub fn legal_white_king_targets(square: usize, board: &Board) -> BitBoard {
+    let friendly_pieces = white(board);
+    let opp_pieces = !friendly_pieces;
+    let mut psudeo_king_moves = KING_TARGETS[square] & opp_pieces;
+    let king_attackers = white_in_check(board);
+
+    if king_attackers == 0 {return psudeo_king_moves;}
+
+    let mut legal_king_moves = 0;
+    while psudeo_king_moves != 0 {
+        let square = pop(&mut psudeo_king_moves);
+        if pieces_target_square(square, board) & opp_pieces == 0 {legal_king_moves |= 1<<square};
+    }
+
+    return legal_king_moves;
+}
+/** Returns all moves that the white king can make legally */
+pub fn legal_black_king_targets(square: usize, board: &Board) -> BitBoard {
+    let friendly_pieces = black(board);
+    let opp_pieces = !friendly_pieces;
+    let mut psudeo_king_moves = KING_TARGETS[square] & opp_pieces;
+    let king_attackers = black_in_check(board);
+
+    if king_attackers == 0 {return psudeo_king_moves;}
+
+    let mut legal_king_moves = 0;
+    while psudeo_king_moves != 0 {
+        let square = pop(&mut psudeo_king_moves);
+        if pieces_target_square(square, board) & opp_pieces == 0 {legal_king_moves |= 1<<square};
+    }
+
+    return legal_king_moves;
+}
+
+#[inline]
+pub fn in_between(square_from: usize, square_to: usize) -> u64 {
+    return IN_BETWEEN_RAY[square_from][square_to];
+}
+#[inline]
+pub fn may_move(square_from: usize, square_to: usize, occupied: BitBoard) -> bool {
+    return (in_between(square_from, square_to) & occupied) == 0;
+}
+
+pub fn legal_targets(square: usize, piece: Piece, colour: Colour, board: &Board) -> BitBoard {
+    let occupied = all(board);
+    let mut psudeo_targets = targets(square, piece, colour, occupied);
+    psudeo_targets &= !board.get_colour(colour);
+
+    if !is_check(board) {return psudeo_targets;}
+    
+    if piece == Piece::King {
+        return match colour {
+            Colour::White => legal_white_king_targets(square, board),
+            Colour::Black => legal_black_king_targets(square, board),
+        };
+    }
+
+    let attacking_pieces = match colour {
+        Colour::White => white_in_check(board),
+        Colour::Black => black_in_check(board),
+    };
+    let king_square = match colour {
+        Colour::White => bitscan_forward(board.kw),
+        Colour::Black => bitscan_forward(board.kb),
+    };
+    let sliding_pieces = attacking_pieces & (board.rw | board.rb | board.bw | board.bb | board.qw | board.qb);
+    let capturable_attacking_pieces = attacking_pieces & psudeo_targets;
+
+    let mut legal_targets = 0;    
+
+    let not_friendly_pieces = !board.get_colour(colour);
+    legal_targets |= match piece {
+        Piece::Knight => knight_targets(king_square) & knight_targets(square) & not_friendly_pieces,
+        Piece::Bishop => bishop_targets(king_square, occupied) & bishop_targets(square, occupied) & not_friendly_pieces,
+        Piece::Queen => queen_targets(king_square, occupied) & queen_targets(square, occupied) & not_friendly_pieces,
+        Piece::Rook => rook_targets(king_square, occupied) & rook_targets(square, occupied) & not_friendly_pieces,
+        Piece::Pawn => {
+            match colour {
+                Colour::White => BLACK_PAWN_ATTACKS[king_square] & WHITE_PAWN_ATTACKS[square] & not_friendly_pieces,
+                Colour::Black => WHITE_PAWN_ATTACKS[king_square] & BLACK_PAWN_ATTACKS[square] & not_friendly_pieces,
+            }
+        },
+        Piece::King => panic!("Impossible has happened"),
+    };
+
+    match popcount_loop(attacking_pieces) {
+        1 => {
+            // If there is only one attacking piece and we can capture it add captuing it to targets
+            if (reset(attacking_pieces) == 0) && (capturable_attacking_pieces != 0) {
+                legal_targets |= capturable_attacking_pieces;
+            }
+            
+            // If the 1 attacking piece is a sliding piece, return all moves that can block that sliding piece from targeting the king
+            if sliding_pieces != 0 {
+                legal_targets |= in_between(king_square, bitscan_forward(sliding_pieces)) & psudeo_targets;
+            }
+            return legal_targets;
+        }
+        _ => {
+            return 0;
+        }
+    };
+}
+
+pub fn is_checkmate(board: &Board) -> bool {
+    return false;
+}
+
+// pub fn white_in_checkmate(board: &Board) -> bool {
+//     let mut checked_king_square = 0;
+//     let king_square = bitscan_forward(board.kw);
+//     if pieces_target_square(king_square, board) != 0 {checked_king_square = king_square}
+
+//     let king_square = bitscan_forward(board.kb);
+//     if pieces_target_square(king_square, board) != 0 {checked_king_square = king_square}
+
+//     if checked_king_square != 0 {
+//         let king_moves = KING_TARGETS[checked_king_square] & !;
+//     }
+
+
+
+//     return false;
+// }
+
+
 
 pub fn get_piece_at_square(square: usize, mut board: Board) -> Option<(Piece, Colour)> {
     let square_bb: u64 = 1<<square;
