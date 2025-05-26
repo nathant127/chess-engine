@@ -270,6 +270,7 @@ name = "chess-engine"
 version = "0.1.0"
 dependencies = [
  "find_folder",
+ "gfx",
  "include_assets",
  "piston",
  "piston2d-graphics",

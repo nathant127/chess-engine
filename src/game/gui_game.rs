@@ -21,8 +21,9 @@ use crate::board_rep::board::{self, Board};
 use crate::board_rep::constants::{Colour, Piece};
 use crate::board_rep::bitboard::{self, rank, file};
 use crate::game::game::{self};
-
+use super::resource_manager::ResourceManager;
 use uuid::Uuid;
+
 
 struct SceneMetaData {
     id: Uuid,
@@ -58,7 +59,13 @@ impl ChessGame {
             .expect("Failed to create piston window");
         window.set_lazy(true);
 
-        
+        let texture_context = TextureContext {
+            factory: window.factory.clone(),
+            encoder: window.factory.create_command_buffer().into()
+        };
+
+        let mut res_manager: ResourceManager = ResourceManager::new(texture_context);
+        let _ = res_manager.add_folder("assets");
 
         let mut game = ChessGame { 
             window: window,
@@ -72,7 +79,7 @@ impl ChessGame {
             scene_metadata: Vec::new(),
             selected_piece: None,
         };
-
+        
         game.create_textures();
         game.create_initial_scene();
 
