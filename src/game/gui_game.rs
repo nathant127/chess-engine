@@ -10,7 +10,6 @@ extern crate uuid;
 
 use piston_window::*;
 use sprite::*;
-use std::rc::Rc;
 
 use opengl_graphics::OpenGL;
 
@@ -75,7 +74,10 @@ impl ChessGame {
             selected_piece: None,
         };
         
-        game.res_man.add_folder("assets");
+        let result = game.res_man.add_folder("assets");
+        if let Err(e) = result {
+            println!("Failed to find the assets folder, is it included with the executable? {e}");
+        }
         game.create_initial_scene();
 
         return game;
@@ -106,26 +108,6 @@ impl ChessGame {
             let id = self.scene.add_child(sprite);
             self.scene_metadata.push(SceneMetaData { id: id, square: index });
         }
-    }
-
-    fn create_texture(&mut self, fname: String ) -> Rc<G2dTexture>{
-        let asset_folder = match find_folder::Search::ParentsThenKids(3, 3)
-            .for_folder("assets") {
-                Ok(folder) => folder,
-                Err(e) => panic!("Failed to find asset folder with err: {:}", e),
-            };
-
-        let mut texture_context = TextureContext {
-            factory: self.window.factory.clone(),
-            encoder: self.window.factory.create_command_buffer().into()
-        };
-
-        Rc::new(Texture::from_path(
-            &mut texture_context,
-            asset_folder.join(fname),
-            Flip::None,
-            &TextureSettings::new()
-        ).unwrap())
     }
     
     fn render(&mut self, e: &Event) {
@@ -242,7 +224,7 @@ impl ChessGame {
             }
         }
 
-        for (i, md) in self.scene_metadata.iter_mut().enumerate() {
+        for md in self.scene_metadata.iter_mut() {
             if md.square == mov.org_square {
                 md.square = mov.tgt_square;
                 self.scene.child_mut(md.id).unwrap().set_position(self.squares[md.square][0] + SQUARE_SIZE/2.0, self.squares[md.square][1] + SQUARE_SIZE/2.0);
@@ -287,7 +269,7 @@ impl ChessGame {
     }
 
     fn update(&mut self, e: &Event) {
-        if let Some(args) = e.render_args() {
+        if let Some(_args) = e.render_args() {
             self.render(&e);
         }
         // if let Some(args) = e.update_args() {
