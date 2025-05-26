@@ -529,20 +529,13 @@ pub fn legal_targets(square: usize, piece: Piece, colour: Colour, board: &Board)
 
     let mut legal_targets = 0;    
 
-    let not_friendly_pieces = !board.get_colour(colour);
-    legal_targets |= match piece {
-        Piece::Knight => knight_targets(king_square) & knight_targets(square) & not_friendly_pieces,
-        Piece::Bishop => bishop_targets(king_square, occupied) & bishop_targets(square, occupied) & not_friendly_pieces,
-        Piece::Queen => queen_targets(king_square, occupied) & queen_targets(square, occupied) & not_friendly_pieces,
-        Piece::Rook => rook_targets(king_square, occupied) & rook_targets(square, occupied) & not_friendly_pieces,
-        Piece::Pawn => {
-            match colour {
-                Colour::White => BLACK_PAWN_ATTACKS[king_square] & WHITE_PAWN_ATTACKS[square] & not_friendly_pieces,
-                Colour::Black => WHITE_PAWN_ATTACKS[king_square] & BLACK_PAWN_ATTACKS[square] & not_friendly_pieces,
-            }
-        },
-        Piece::King => panic!("Impossible has happened"),
-    };
+    // Code that lets you check the opposing king to get out of check
+    //let not_friendly_pieces = !board.get_colour(colour);
+    // let opp_king_atk_spaces = match colour {
+    //     Colour::White => targets(bitscan_forward(board.kb), piece, Colour::Black, occupied),
+    //     Colour::Black => targets(bitscan_forward(board.kw), piece, Colour::White, occupied),
+    // };
+    // legal_targets |= opp_king_atk_spaces & psudeo_targets & not_friendly_pieces;
 
     match popcount_loop(attacking_pieces) {
         1 => {
