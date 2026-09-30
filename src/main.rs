@@ -1,6 +1,7 @@
-use chess_engine::game::gui_game::run_game;
+use chess_engine::game::gui_game::ChessGui;
 
 
 fn main() {
-    run_game();
+    let mut game = ChessGui::new();
+    game.run();
 }

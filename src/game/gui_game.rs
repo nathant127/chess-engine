@@ -20,7 +20,7 @@ use crate::board_rep;
 use crate::board_rep::board::{self, Board};
 use crate::board_rep::constants::{Colour, Piece};
 use crate::board_rep::bitboard::{self, rank, file};
-use crate::game::game::{self};
+use crate::game::game::{self, ChessGame};
 use super::resource_manager::ResourceManager;
 use uuid::Uuid;
 
@@ -31,7 +31,7 @@ struct SceneMetaData {
 }
 
 type Rectangle = [f64;4];
-pub struct ChessGame {
+pub struct ChessGui {
     window: PistonWindow,
     res_man: ResourceManager,
     scene: Scene<G2dTexture>,
@@ -39,17 +39,18 @@ pub struct ChessGame {
     cursor: [f64; 2],
     window_size: [f64; 2],
 
-    board: Board,
     highlights: [bool; 64],
     selected_piece: Option<(Piece, Colour, usize)>,
     squares: [Rectangle; 64],
+
+    game: ChessGame,
 }
 
 const OPENGL: OpenGL = OpenGL::V3_2;
 const SQUARE_SIZE: f64 = 100.0;
 
-impl ChessGame {
-    fn make_game() -> ChessGame {
+impl ChessGui {
+    pub fn new() -> ChessGui {
         let mut window: PistonWindow = WindowSettings::new("Chess Engine", [1000, 1000])
             .graphics_api(OPENGL)
             .exit_on_esc(true)
@@ -62,42 +63,48 @@ impl ChessGame {
             encoder: window.factory.create_command_buffer().into()
         };
 
-        let mut game = ChessGame { 
+        let mut gui = ChessGui { 
             window: window,
-            board: Board::default(), 
             cursor: [0.0, 0.0], 
             highlights: [false; 64], 
-            squares: ChessGame::init_board_squares(),
+            squares: ChessGui::init_board_squares(),
             window_size: [0.0, 0.0],
             res_man: ResourceManager::new(texture_context),
             scene: Scene::new(),
             scene_metadata: Vec::new(),
             selected_piece: None,
+            game: ChessGame::new(),
         };
         
-        let result = game.res_man.add_folder("assets");
+        let result = gui.res_man.add_folder("assets");
         if let Err(e) = result {
             println!("Failed to find the assets folder, is it included with the executable? {e}");
         }
-        game.create_initial_scene();
+        gui.create_initial_scene();
 
-        return game;
+        return gui;
+    }
+
+    pub fn run(&mut self) {
+        while let Some(e) = self.window.next() {
+            self.update(&e);
+        }   
     }
 
     fn create_initial_scene(&mut self){
-        self.fill_scene_piece(self.board.pw, "white_pawn.png");
-        self.fill_scene_piece(self.board.nw, "white_knight.png");
-        self.fill_scene_piece(self.board.bw, "white_bishop.png");
-        self.fill_scene_piece(self.board.rw, "white_rook.png");
-        self.fill_scene_piece(self.board.qw, "white_queen.png");
-        self.fill_scene_piece(self.board.kw, "white_king.png");
+        self.fill_scene_piece(self.game.get_board().pw, "white_pawn.png");
+        self.fill_scene_piece(self.game.get_board().nw, "white_knight.png");
+        self.fill_scene_piece(self.game.get_board().bw, "white_bishop.png");
+        self.fill_scene_piece(self.game.get_board().rw, "white_rook.png");
+        self.fill_scene_piece(self.game.get_board().qw, "white_queen.png");
+        self.fill_scene_piece(self.game.get_board().kw, "white_king.png");
 
-        self.fill_scene_piece(self.board.pb, "black_pawn.png");
-        self.fill_scene_piece(self.board.nb, "black_knight.png");
-        self.fill_scene_piece(self.board.bb, "black_bishop.png");
-        self.fill_scene_piece(self.board.rb, "black_rook.png");
-        self.fill_scene_piece(self.board.qb, "black_queen.png");
-        self.fill_scene_piece(self.board.kb, "black_king.png");
+        self.fill_scene_piece(self.game.get_board().pb, "black_pawn.png");
+        self.fill_scene_piece(self.game.get_board().nb, "black_knight.png");
+        self.fill_scene_piece(self.game.get_board().bb, "black_bishop.png");
+        self.fill_scene_piece(self.game.get_board().rb, "black_rook.png");
+        self.fill_scene_piece(self.game.get_board().qb, "black_queen.png");
+        self.fill_scene_piece(self.game.get_board().kb, "black_king.png");
     }
 
     fn fill_scene_piece(&mut self, mut bitboard: u64, tex_name: &str) {
@@ -174,7 +181,7 @@ impl ChessGame {
 
         
         if let Some(sel_piece) = self.selected_piece  {
-            let targets = board::legal_targets(sel_piece.2, sel_piece.0, sel_piece.1, &self.board);
+            let targets = board::legal_targets(sel_piece.2, sel_piece.0, sel_piece.1, &self.game.get_board());
             if (1<<clicked_square) & targets != 0 {
                 let mov: game::Move = game::Move {
                     org_square: sel_piece.2, 
@@ -182,7 +189,7 @@ impl ChessGame {
                     piece: sel_piece.0, 
                     colour: sel_piece.1
                 };
-                let special_actions = match game::execute_move(&mut self.board, &mov) {
+                let special_actions = match self.game.execute_move(&mov) {
                     Some(x) => x,
                     None => {return;},
                 };
@@ -192,7 +199,7 @@ impl ChessGame {
             }
         }
 
-        let piece_colour = match board::get_piece_at_square(clicked_square, self.board) {
+        let piece_colour = match board::get_piece_at_square(clicked_square, self.game.get_board()) {
             Some(p) => p,
             None => {
                 self.selected_piece = None;
@@ -206,7 +213,7 @@ impl ChessGame {
     }
 
     fn update_highlights(&mut self, square: usize, piece_colour: (Piece, Colour)) {
-        let mut targets = board::legal_targets(square, piece_colour.0, piece_colour.1, &self.board);
+        let mut targets = board::legal_targets(square, piece_colour.0, piece_colour.1, &self.game.get_board());
         while targets != 0 {
             let index = bitboard::pop(&mut targets);
             self.highlights[index] = true;
@@ -236,7 +243,7 @@ impl ChessGame {
 
     fn resolve_square(& self, x: f64, y: f64) -> Option<usize> {
         for (i, square) in self.squares.iter().enumerate() {
-            if ChessGame::is_inside_square(x, y, square[0], square[1], square[2]) {
+            if ChessGui::is_inside_square(x, y, square[0], square[1], square[2]) {
                 return Some(i);
             }
         }
@@ -289,18 +296,4 @@ impl ChessGame {
         //     println!("Scancode {:?}", args);
         // }
     }
-}
-
-pub fn run_game() {
-    // Change this to OpenGL::V2_1 if not working.
-    
-    board_rep::debug::print_bitboard(board_rep::constants::IN_BETWEEN_RAY[3][12]);
-
-    // Create a new game and run it.
-    let mut game = ChessGame::make_game();
-
-    // Run game until there are no more events
-    while let Some(e) = game.window.next() {
-        game.update(&e);
-    }   
 }

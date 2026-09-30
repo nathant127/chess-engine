@@ -2,6 +2,65 @@ use crate::board_rep::bitboard::{BitBoard};
 use crate::board_rep::board::*;
 use crate::board_rep::constants::{Piece, Colour};
 
+pub struct ChessGame {
+    board: Board
+}
+
+impl ChessGame {
+    pub fn new() -> ChessGame {
+        let game  = ChessGame {
+            board: Board::default(),
+        };
+
+        return game;
+    }
+
+    pub fn get_board(&self) -> Board {
+        return self.board;
+    }
+
+    pub fn execute_move(&mut self, mov: &Move) -> Option<[bool; 6]> {
+        if self.is_move_valid( mov) == false {
+            println!("Move is invalid");
+            return None;
+        }
+        let mut special_actions = [false; 6];
+        let mut board_copy: Board = self.board;
+        board_copy = board_copy & (1<<mov.tgt_square);
+        if all(&board_copy) != 0 {
+            special_actions[SpecialActions::Capture as usize] = true;
+        }
+
+        self.board = self.board & !(1<<mov.tgt_square);
+
+        let piece_bb: &mut BitBoard = self.board.get_bb_mut(mov.piece, mov.colour);
+        *piece_bb &= !(1<<mov.org_square);
+        *piece_bb |= 1<<mov.tgt_square;
+
+        return Some(special_actions);
+    }
+
+    pub fn is_move_valid(&mut self, mov: &Move) -> bool {
+        let piece_bb: BitBoard = self.board.get_bb(mov.piece, mov.colour);
+
+        let piece_exists = piece_bb & (1 << mov.org_square) != 0;
+        if !piece_exists
+            {return false;}
+
+        let occupied = all(&self.board);
+        let piece_targets = targets(mov.org_square, mov.piece, mov.colour, occupied);
+
+        let my_pieces = self.board.get_colour(mov.colour);
+        let valid_moves = piece_targets & !my_pieces;
+        println!("huh");
+        let can_piece_reach_target = valid_moves & (1<<mov.tgt_square) != 0;
+        if !can_piece_reach_target
+            {return false;}
+
+        return true;
+    }
+}
+
 #[derive(Eq, PartialEq)]
 pub enum SpecialActions {
     Castle,
@@ -81,43 +140,3 @@ pub fn fmt_bitboard_char(board: BitBoard, disp_char: char) -> [char; 64]{
 }
 
 
-pub fn execute_move(board: &mut Board, mov: &Move) -> Option<[bool; 6]> {
-    if is_move_valid(board, mov) == false {
-        println!("Move is invalid");
-        return None;
-    }
-    let mut special_actions = [false; 6];
-    let mut board_copy: Board = *board;
-    board_copy = board_copy & (1<<mov.tgt_square);
-    if all(&board_copy) != 0 {
-        special_actions[SpecialActions::Capture as usize] = true;
-    }
-
-    *board = *board & !(1<<mov.tgt_square);
-
-    let piece_bb: &mut BitBoard = board.get_bb_mut(mov.piece, mov.colour);
-    *piece_bb &= !(1<<mov.org_square);
-    *piece_bb |= 1<<mov.tgt_square;
-
-    return Some(special_actions);
-}
-
-pub fn is_move_valid(board: &Board, mov: &Move) -> bool {
-    let piece_bb: BitBoard = board.get_bb(mov.piece, mov.colour);
-
-    let piece_exists = piece_bb & (1 << mov.org_square) != 0;
-    if !piece_exists
-        {return false;}
-
-    let occupied = all(board);
-    let piece_targets = targets(mov.org_square, mov.piece, mov.colour, occupied);
-
-    let my_pieces = board.get_colour(mov.colour);
-    let valid_moves = piece_targets & !my_pieces;
-    println!("huh");
-    let can_piece_reach_target = valid_moves & (1<<mov.tgt_square) != 0;
-    if !can_piece_reach_target
-        {return false;}
-
-    return true;
-}
