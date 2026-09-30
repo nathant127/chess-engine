@@ -3,13 +3,15 @@ use crate::board_rep::board::*;
 use crate::board_rep::constants::{Piece, Colour};
 
 pub struct ChessGame {
-    board: Board
+    board: Board,
+    turn: u32,
 }
 
 impl ChessGame {
     pub fn new() -> ChessGame {
         let game  = ChessGame {
             board: Board::default(),
+            turn: 0,
         };
 
         return game;
@@ -19,7 +21,7 @@ impl ChessGame {
         return self.board;
     }
 
-    pub fn execute_move(&mut self, mov: &Move) -> Option<[bool; 6]> {
+    pub fn try_move(&mut self, mov: &Move) -> Option<[bool; 6]> {
         if self.is_move_valid( mov) == false {
             println!("Move is invalid");
             return None;
@@ -33,26 +35,38 @@ impl ChessGame {
 
         self.board = self.board & !(1<<mov.tgt_square);
 
-        let piece_bb: &mut BitBoard = self.board.get_bb_mut(mov.piece, mov.colour);
+        let (piece, colour) = get_piece_at_square(mov.org_square, self.board).unwrap();
+
+        let piece_bb: &mut BitBoard = self.board.get_bb_mut(piece, colour);
         *piece_bb &= !(1<<mov.org_square);
         *piece_bb |= 1<<mov.tgt_square;
 
+        self.turn += 1;
         return Some(special_actions);
     }
 
     pub fn is_move_valid(&mut self, mov: &Move) -> bool {
-        let piece_bb: BitBoard = self.board.get_bb(mov.piece, mov.colour);
+        let (piece, colour) = match get_piece_at_square(mov.org_square, self.board) {
+            Some(pc) => pc,
+            None => return false
+        };
+
+        // If piece to move does not match the turn
+        if (self.turn % 2 == 0 && colour == Colour::Black) || (self.turn % 2 == 1 && colour == Colour::White) {
+            return false;
+        } 
+        let piece_bb: BitBoard = self.board.get_bb(piece, colour);
 
         let piece_exists = piece_bb & (1 << mov.org_square) != 0;
         if !piece_exists
             {return false;}
 
         let occupied = all(&self.board);
-        let piece_targets = targets(mov.org_square, mov.piece, mov.colour, occupied);
+        let piece_targets = targets(mov.org_square, piece, colour, occupied);
 
-        let my_pieces = self.board.get_colour(mov.colour);
+        let my_pieces = self.board.get_colour(colour);
         let valid_moves = piece_targets & !my_pieces;
-        println!("huh");
+
         let can_piece_reach_target = valid_moves & (1<<mov.tgt_square) != 0;
         if !can_piece_reach_target
             {return false;}
@@ -75,8 +89,6 @@ pub enum SpecialActions {
 pub struct Move {
     pub org_square: usize,
     pub tgt_square: usize,
-    pub piece: Piece,
-    pub colour: Colour,
 }
 
 impl Default for Move {
@@ -84,8 +96,6 @@ impl Default for Move {
         Self {
             org_square: 0,
             tgt_square: 0,
-            piece: Piece::Pawn,
-            colour: Colour::White,
         }
     }
 }

@@ -8,6 +8,7 @@ extern crate sprite;
 extern crate piston_window;
 extern crate uuid;
 
+use graphics::rectangle::square;
 use piston_window::*;
 use sprite::*;
 
@@ -40,7 +41,7 @@ pub struct ChessGui {
     window_size: [f64; 2],
 
     highlights: [bool; 64],
-    selected_piece: Option<(Piece, Colour, usize)>,
+    selected_square: Option<usize>,
     squares: [Rectangle; 64],
 
     game: ChessGame,
@@ -72,7 +73,7 @@ impl ChessGui {
             res_man: ResourceManager::new(texture_context),
             scene: Scene::new(),
             scene_metadata: Vec::new(),
-            selected_piece: None,
+            selected_square: None,
             game: ChessGame::new(),
         };
         
@@ -166,54 +167,50 @@ impl ChessGui {
     }
 
     fn on_click(&mut self, button: &MouseButton) {
-        println!("Pressed Button {:?} at pos {:}, {:}", button, self.cursor[0], self.cursor[1]);
+
+        // Check if clicked on board, if so handle it
         let (x_board_frame, y_board_frame) = (self.cursor[0] - self.window_size[0] / 2.0, self.cursor[1] - self.window_size[1] / 2.0);
         let square_op: Option<usize> = self.resolve_square(x_board_frame, y_board_frame);
         
         self.highlights = [false; 64];
-        let clicked_square = match square_op {
-            Some(sq) => sq,
-            None => {
-                self.selected_piece = None;
-                return;
-            }
-        };
+        if let Some(clicked_square) = square_op {
 
-        
-        if let Some(sel_piece) = self.selected_piece  {
-            let targets = board::legal_targets(sel_piece.2, sel_piece.0, sel_piece.1, &self.game.get_board());
-            if (1<<clicked_square) & targets != 0 {
+            if let Some(sel_square) = self.selected_square  {
                 let mov: game::Move = game::Move {
-                    org_square: sel_piece.2, 
+                    org_square: sel_square, 
                     tgt_square: clicked_square, 
-                    piece: sel_piece.0, 
-                    colour: sel_piece.1
                 };
-                let special_actions = match self.game.execute_move(&mov) {
-                    Some(x) => x,
-                    None => {return;},
+                match self.game.try_move(&mov) {
+                    Some(special_actions) => self.update_sprites(&mov, special_actions),
+                    None => {},
                 };
-                self.update_sprites(&mov, special_actions);
-                self.selected_piece = None;
+                
+                self.selected_square = None;
                 return;
             }
+    
+            let (piece, colour) = match board::get_piece_at_square(clicked_square, self.game.get_board()) {
+                Some(p) => p,
+                None => {
+                    self.selected_square = None;
+                    return;
+                }
+            };
+            self.selected_square = Some(clicked_square);
+            self.update_highlights(clicked_square, piece, colour);
+
+        }
+        else {
+            self.selected_square = None;
+            return;
         }
 
-        let piece_colour = match board::get_piece_at_square(clicked_square, self.game.get_board()) {
-            Some(p) => p,
-            None => {
-                self.selected_piece = None;
-                return;
-            }
-        };
-        self.selected_piece = Some((piece_colour.0, piece_colour.1, clicked_square));
-
-        self.update_highlights(clicked_square, piece_colour);
+        
 
     }
 
-    fn update_highlights(&mut self, square: usize, piece_colour: (Piece, Colour)) {
-        let mut targets = board::legal_targets(square, piece_colour.0, piece_colour.1, &self.game.get_board());
+    fn update_highlights(&mut self, square: usize, piece: Piece, colour: Colour) {
+        let mut targets = board::legal_targets(square, piece, colour, &self.game.get_board());
         while targets != 0 {
             let index = bitboard::pop(&mut targets);
             self.highlights[index] = true;

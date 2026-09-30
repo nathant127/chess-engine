@@ -33,12 +33,12 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
     // Castle checker
     if notation == String::from("O-O") {
         special_action[SpecialActions::Castle as usize] = true;
-        return Some(Move{ org_square: 0, tgt_square: 0, piece: Piece::King, colour: colour});
+        return Some(Move{ org_square: 0, tgt_square: 0});
     }
     // Long Castle checker
     if notation == String::from("O-O-O") {
         special_action[SpecialActions::LongCastle as usize] = true;
-        return Some(Move{ org_square: 0, tgt_square: 0, piece: Piece::King, colour: colour});
+        return Some(Move{ org_square: 0, tgt_square: 0});
     }
 
     // Start parsing the string
@@ -130,7 +130,7 @@ pub fn interpret_notation(mut notation: String, board: &Board, colour: Colour) -
         special_action[SpecialActions::Capture as usize] = true;
     }
 
-    return Some(Move{ org_square: org_index, tgt_square: tgt_index, piece: piece, colour: colour});
+    return Some(Move{ org_square: org_index, tgt_square: tgt_index});
 }
 
 fn remove_match(str: &mut String, char: char) -> bool {
