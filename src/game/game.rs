@@ -5,6 +5,7 @@ use crate::board_rep::constants::{Piece, Colour};
 pub struct ChessGame {
     board: Board,
     turn: u32,
+    is_checkmate: bool,
 }
 
 impl ChessGame {
@@ -12,6 +13,7 @@ impl ChessGame {
         let game  = ChessGame {
             board: Board::default(),
             turn: 0,
+            is_checkmate: false,
         };
 
         return game;
@@ -31,6 +33,8 @@ impl ChessGame {
         if all(&board_copy) != 0 {
             special_actions[SpecialActions::Capture as usize] = true;
         }
+
+        // TODO: Handle other special Actions
 
         self.board = self.board & !(1<<mov.tgt_square);
 

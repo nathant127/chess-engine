@@ -184,7 +184,7 @@ impl ChessGui {
                     tgt_square: clicked_square, 
                 };
                 match self.game.try_move(&mov) {
-                    Some(special_actions) => self.update_sprites(&mov, special_actions),
+                    Some(special_actions) => self.update_gui_with_new_move(&mov, special_actions),
                     None => {},
                 };
                 
@@ -221,7 +221,8 @@ impl ChessGui {
         }
     }
 
-    fn update_sprites(&mut self, mov: &game::Move, special_actions: [bool; 6]) {
+    fn update_gui_with_new_move(&mut self, mov: &game::Move, special_actions: [bool; 6]) {
+        
         // Remove captured piece
         if special_actions[game::SpecialActions::Capture as usize] == true {
             for (i,md) in self.scene_metadata.iter_mut().enumerate() {
@@ -233,6 +234,8 @@ impl ChessGui {
             }
         }
 
+        // TODO: Add checkmate popup
+        
         for md in self.scene_metadata.iter_mut() {
             if md.square == mov.org_square {
                 md.square = mov.tgt_square;

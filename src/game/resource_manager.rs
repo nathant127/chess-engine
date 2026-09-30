@@ -47,7 +47,6 @@ impl ResourceManager {
         for path in paths {
             let path = path.unwrap().path();
             if *path.extension().unwrap_or(OsStr::new("")) == *OsStr::new("png") {
-                println!("found img: {:}", path.as_os_str().to_str().unwrap_or("err"));
                 self.add_texture(&path);
             }
         }
