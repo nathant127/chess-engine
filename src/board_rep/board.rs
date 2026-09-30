@@ -609,6 +609,14 @@ pub fn get_piece_at_square(square: usize, mut board: Board) -> Option<(Piece, Co
     return Some((piece, colour));
 }
 
+pub fn is_piece_at_square(square: usize, board: &Board) -> bool {
+    let square_bb: u64 = 1<<square;
+    if square_bb & all(&board) > 0 {
+        return true;
+    }
+    return false;
+}
+
 pub fn all_white_moves(board: &Board) -> [BitBoard; 64] {
     let mut moves: [BitBoard; 64] = [0; 64];
     let occupied: u64 = all(board);

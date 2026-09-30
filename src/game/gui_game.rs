@@ -41,7 +41,7 @@ pub struct ChessGui {
     window_size: [f64; 2],
 
     highlights: [bool; 64],
-    selected_square: Option<usize>,
+    selected_piece_square: Option<usize>,
     squares: [Rectangle; 64],
 
     game: ChessGame,
@@ -73,7 +73,7 @@ impl ChessGui {
             res_man: ResourceManager::new(texture_context),
             scene: Scene::new(),
             scene_metadata: Vec::new(),
-            selected_square: None,
+            selected_piece_square: None,
             game: ChessGame::new(),
         };
         
@@ -139,6 +139,9 @@ impl ChessGui {
         let x_board = 0.0;
         let y_board = 0.0;
 
+        // Update what squares are highlighted based on the selected piece
+        self.update_highlights();
+
         self.window.draw_2d(e, |c, g, _| {
             clear(BACKGROUND, g);
 
@@ -172,10 +175,10 @@ impl ChessGui {
         let (x_board_frame, y_board_frame) = (self.cursor[0] - self.window_size[0] / 2.0, self.cursor[1] - self.window_size[1] / 2.0);
         let square_op: Option<usize> = self.resolve_square(x_board_frame, y_board_frame);
         
-        self.highlights = [false; 64];
+        
         if let Some(clicked_square) = square_op {
 
-            if let Some(sel_square) = self.selected_square  {
+            if let Some(sel_square) = self.selected_piece_square  {
                 let mov: game::Move = game::Move {
                     org_square: sel_square, 
                     tgt_square: clicked_square, 
@@ -185,23 +188,16 @@ impl ChessGui {
                     None => {},
                 };
                 
-                self.selected_square = None;
+                self.selected_piece_square = None;
                 return;
             }
-    
-            let (piece, colour) = match board::get_piece_at_square(clicked_square, self.game.get_board()) {
-                Some(p) => p,
-                None => {
-                    self.selected_square = None;
-                    return;
-                }
-            };
-            self.selected_square = Some(clicked_square);
-            self.update_highlights(clicked_square, piece, colour);
-
+            
+            if self.game.square_can_move(clicked_square) {
+                self.selected_piece_square = Some(clicked_square);
+            }
         }
         else {
-            self.selected_square = None;
+            self.selected_piece_square = None;
             return;
         }
 
@@ -209,8 +205,16 @@ impl ChessGui {
 
     }
 
-    fn update_highlights(&mut self, square: usize, piece: Piece, colour: Colour) {
-        let mut targets = board::legal_targets(square, piece, colour, &self.game.get_board());
+    fn update_highlights(&mut self) {
+        let square = match self.selected_piece_square {
+            Some(sq) => sq,
+            None => {
+                self.highlights = [false; 64];
+                return;
+            }
+        };
+
+        let mut targets = self.game.square_possible_targets(square);
         while targets != 0 {
             let index = bitboard::pop(&mut targets);
             self.highlights[index] = true;

@@ -23,7 +23,6 @@ impl ChessGame {
 
     pub fn try_move(&mut self, mov: &Move) -> Option<[bool; 6]> {
         if self.is_move_valid( mov) == false {
-            println!("Move is invalid");
             return None;
         }
         let mut special_actions = [false; 6];
@@ -55,23 +54,34 @@ impl ChessGame {
         if (self.turn % 2 == 0 && colour == Colour::Black) || (self.turn % 2 == 1 && colour == Colour::White) {
             return false;
         } 
-        let piece_bb: BitBoard = self.board.get_bb(piece, colour);
 
-        let piece_exists = piece_bb & (1 << mov.org_square) != 0;
-        if !piece_exists
-            {return false;}
+        let possible_targets = legal_targets(mov.org_square, piece, colour, &self.board);
+        let tgt_bb = 1 << mov.tgt_square;
 
-        let occupied = all(&self.board);
-        let piece_targets = targets(mov.org_square, piece, colour, occupied);
+        return match possible_targets & tgt_bb {
+            0 => false,
+            _ => true
+        }
+    }
 
-        let my_pieces = self.board.get_colour(colour);
-        let valid_moves = piece_targets & !my_pieces;
+    /// Returns true if there is a piece on the given square that can move
+    pub fn square_can_move(&mut self, square: usize) -> bool {
+        return self.square_possible_targets(square) != 0;
+    }
 
-        let can_piece_reach_target = valid_moves & (1<<mov.tgt_square) != 0;
-        if !can_piece_reach_target
-            {return false;}
+    /// Returns a bitboard of every possible square the piece on the given square could target
+    /// Returns empty bitboard if it is not the correct turn, or if selected square does not contain a piece
+    pub fn square_possible_targets(&mut self, square: usize) -> BitBoard {
+        let (piece, colour) = match get_piece_at_square(square, self.board) {
+            Some(pc) => pc,
+            None => return 0
+        };
 
-        return true;
+        if (self.turn % 2 == 0 && colour == Colour::Black) || (self.turn % 2 == 1 && colour == Colour::White) {
+            return 0;
+        }
+
+        return legal_targets(square, piece, colour, &self.board);
     }
 }
 
