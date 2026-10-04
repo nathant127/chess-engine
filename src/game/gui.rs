@@ -15,7 +15,7 @@ use opengl_graphics::OpenGL;
 use piston::input::RenderEvent;
 use piston::window::WindowSettings;
 
-use crate::game::game::ChessGame;
+use crate::game::game::{ChessGame, Player};
 use crate::game::main_menu::MainMenu;
 use super::resource_manager::ResourceManager;
 
@@ -23,11 +23,14 @@ use super::resource_manager::ResourceManager;
 pub struct State {
     pub current_scene: i64,
     pub next_scene: i64,
+
+    pub chosen_players: [Player; 2],
 }
 
 pub trait GraphicsObject {
     fn render(&mut self, e: &Event, state: &State, gui: &mut Gui);
     fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui);
+    fn update(&mut self, state: &mut State, gui: &Gui);
 }
 
 
@@ -61,7 +64,7 @@ impl ChessGui {
             .exit_on_esc(true)
             .build()
             .expect("Failed to create piston window");
-        window.set_lazy(true);
+        window.set_lazy(false);
 
         let texture_context = TextureContext {
             factory: window.factory.clone(),
@@ -81,10 +84,10 @@ impl ChessGui {
 
         gui.resource_manager.add_font("assets/fonts/Montserrat/Montserrat-VariableFont_wght.ttf", &mut gui.window);
         
-        let game = ChessGame::new(&gui);
+        let game = ChessGame::new(&gui, Player::LocalPlayer, Player::LocalPlayer);
 
         let chess_gui = ChessGui { 
-            state: State {current_scene: 0, next_scene: 0},
+            state: State {current_scene: 0, next_scene: 0, chosen_players: [Player::LocalPlayer, Player::LocalPlayer]},
             
             gui: gui,
             
@@ -97,7 +100,7 @@ impl ChessGui {
 
     pub fn run(&mut self) {
         while let Some(e) = self.gui.window.next() {
-            self.update(&e);
+            self.handle_events(&e);
         }   
     }
     
@@ -122,22 +125,31 @@ impl ChessGui {
 
     }
 
-    fn update(&mut self, e: &Event) {
+    fn update(&mut self, _e: &Event) {
+        match self.state.current_scene {
+            0 => self.main_menu.update(&mut self.state,  &self.gui),
+            1 => self.game.update(&mut self.state, &self.gui),
+            _ => {},
+        }    
+    }
+
+    fn handle_events(&mut self, e: &Event) {
 
         if (self.state.current_scene != self.state.next_scene) {
             if self.state.next_scene == 1 {
-                self.game = ChessGame::new(&self.gui);
+                self.game = ChessGame::new(&self.gui, self.state.chosen_players[0], self.state.chosen_players[1]);
             }
 
             self.state.current_scene = self.state.next_scene;
         }
 
+        if let Some(_args) = e.update_args() {
+            self.update(&e);
+        }
+
         if let Some(_args) = e.render_args() {
             self.render(&e);
         }
-        // if let Some(args) = e.update_args() {
-        //     self.update(&args);
-        // }
 
         // Update mouse cursor pos every frame
         e.mouse_cursor(|pos| {

@@ -74,4 +74,8 @@ impl GraphicsObject for Button {
     fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui) {
 
     }
+
+    fn update(&mut self, state: &mut State, gui: &Gui) {
+        
+    }
 }

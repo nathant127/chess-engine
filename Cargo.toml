@@ -16,3 +16,5 @@ piston2d-sprite = "0.68.0"
 uuid = "*"
 include_assets = "1.0.0"
 gfx = "*"
+
+rand = "0.10.3"

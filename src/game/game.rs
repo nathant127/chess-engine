@@ -1,3 +1,8 @@
+use std::println;
+
+use piston::Key::L;
+use rand::prelude::IndexedRandom;
+
 use piston::{Event, MouseButton};
 use piston::input::RenderEvent;
 use piston_window::*;
@@ -15,12 +20,31 @@ struct SceneMetaData {
     square: usize,
 }
 
+#[derive(Eq, PartialEq, Clone, Copy)]
+pub enum Player {
+    LocalPlayer,
+    Bot,
+    RemotePlayer
+}
+
+impl std::fmt::Display for Player {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Player::LocalPlayer => write!(f, "LocalPlayer"),
+            Player::Bot => write!(f, "Bot"),
+            Player::RemotePlayer => write!(f, "RemotePlayer"),
+        }
+    }
+}
+
 type Rectangle = [f64;4];
 const SQUARE_SIZE: f64 = 100.0;
 
 pub struct ChessGame {
     board: Board,
     turn: u32,
+    white_player: Player,
+    black_player: Player,
 
     scene: Scene<G2dTexture>,
     scene_metadata: Vec<SceneMetaData>,
@@ -33,10 +57,13 @@ pub struct ChessGame {
 }
 
 impl ChessGame {
-    pub fn new(gui: &Gui) -> ChessGame {
+    pub fn new(gui: &Gui, white_player: Player, black_player: Player) -> ChessGame {
+        println!("white: {white_player}, black: {black_player}");
         let mut game  = ChessGame {
             board: Board::default(),
             turn: 0,
+            white_player: white_player,
+            black_player: black_player,
 
             scene: Scene::new(),
             scene_metadata: Vec::new(),
@@ -79,6 +106,8 @@ impl ChessGame {
         *piece_bb |= 1<<mov.tgt_square;
 
         self.turn += 1;
+
+        self.update_with_move(&mov, special_actions);
         return Some(special_actions);
     }
 
@@ -272,38 +301,78 @@ impl GraphicsObject for ChessGame {
         self.exit_button.render(e, state, gui);
     }
     fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui) {
-        // Check if clicked on board, if so handle it
-        let (x_board_frame, y_board_frame) = (gui.cursor[0] - gui.window_size[0] / 2.0, gui.cursor[1] - gui.window_size[1] / 2.0);
-        let square_op: Option<usize> = self.resolve_square(x_board_frame, y_board_frame);
         
-        
-        if let Some(clicked_square) = square_op {
+        // If the current player is a local player
+        if (self.white_player == Player::LocalPlayer && self.turn % 2 == 0) ||(self.black_player == Player::LocalPlayer && self.turn % 2 == 1) {
 
-            if let Some(sel_square) = self.selected_piece_square  {
-                let mov: Move = Move {
-                    org_square: sel_square, 
-                    tgt_square: clicked_square, 
-                };
-                match self.try_move(&mov) {
-                    Some(special_actions) => self.update_with_move(&mov, special_actions),
-                    None => {},
-                };
-                
-                self.selected_piece_square = None;
-                return;
-            }
+            // Check if they clicked on board, and if so what board they clicked on
+            let (x_board_frame, y_board_frame) = (gui.cursor[0] - gui.window_size[0] / 2.0, gui.cursor[1] - gui.window_size[1] / 2.0);
+            let square_op: Option<usize> = self.resolve_square(x_board_frame, y_board_frame);
             
-            if self.square_can_move(clicked_square) {
-                self.selected_piece_square = Some(clicked_square);
+            
+            if let Some(clicked_square) = square_op {
+    
+                if let Some(sel_square) = self.selected_piece_square  {
+                    let mov: Move = Move {
+                        org_square: sel_square, 
+                        tgt_square: clicked_square, 
+                    };
+
+                    self.try_move(&mov);
+                    self.selected_piece_square = None;
+                    return;
+                }
+                
+                if self.square_can_move(clicked_square) {
+                    self.selected_piece_square = Some(clicked_square);
+                }
             }
-        }
-        else {
-            self.selected_piece_square = None;
+            else {
+                self.selected_piece_square = None;
+            }
         }
         
 
         if self.exit_button.is_mouse_over_button(gui.cursor) {
             state.next_scene = 0;
+        }
+    }
+
+    fn update(&mut self, state: &mut State, gui: &Gui) {
+        if (self.white_player == Player::Bot && self.turn % 2 == 0) ||(self.black_player == Player::Bot && self.turn % 2 == 1) {
+            // Get the pieces that correspond to the current turn
+            let mut possible_pieces = match self.turn % 2{
+                0 => white(&self.board),
+                _ => black(&self.board),
+            };
+
+
+            // Create a vector of each possible piece
+            let mut squares: Vec<usize> = Vec::new();
+            while (possible_pieces != 0) {
+                squares.push(bitboard::pop(&mut possible_pieces));
+            }
+
+            // Remove squares that can't move
+            squares.retain(|&sq| self.square_can_move(sq));
+
+            if squares.len() > 0 {
+                let mut rng = rand::rng();
+                let sq = squares.choose(&mut rng).unwrap();
+                
+                let mut targets_bb = self.square_possible_targets(*sq);
+                let mut targets: Vec<usize> = Vec::new();
+                while (targets_bb != 0) {
+                    targets.push(bitboard::pop(&mut targets_bb));
+                }
+                let tgt = targets.choose(&mut rng).unwrap();
+
+                let mov = Move {
+                    org_square: *sq,
+                    tgt_square: *tgt,
+                };
+                self.try_move(&mov);
+            }
         }
     }
 }
