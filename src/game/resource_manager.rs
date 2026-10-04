@@ -13,7 +13,7 @@ use piston_window::*;
 
 type Font = Rc<RefCell<Glyphs>>;
 
-pub(super) struct ResourceManager {
+pub struct ResourceManager {
     resource_folders: Vec<PathBuf>,
     texture_context: G2dTextureContext,
     textures: HashMap<String, Rc<G2dTexture>>,

@@ -1,6 +1,3 @@
-use std::println;
-
-use piston::Key::L;
 use rand::prelude::IndexedRandom;
 
 use piston::{Event, MouseButton};
@@ -300,7 +297,7 @@ impl GraphicsObject for ChessGame {
 
         self.exit_button.render(e, state, gui);
     }
-    fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui) {
+    fn on_click(&mut self, _button: &MouseButton, state: &mut State, gui: &Gui) {
         
         // If the current player is a local player
         if (self.white_player == Player::LocalPlayer && self.turn % 2 == 0) ||(self.black_player == Player::LocalPlayer && self.turn % 2 == 1) {
@@ -338,10 +335,10 @@ impl GraphicsObject for ChessGame {
         }
     }
 
-    fn update(&mut self, state: &mut State, gui: &Gui) {
+    fn update(&mut self, _state: &mut State, _gui: &Gui) {
         if (self.white_player == Player::Bot && self.turn % 2 == 0) ||(self.black_player == Player::Bot && self.turn % 2 == 1) {
             // Get the pieces that correspond to the current turn
-            let mut possible_pieces = match self.turn % 2{
+            let mut possible_pieces = match self.turn % 2 {
                 0 => white(&self.board),
                 _ => black(&self.board),
             };
@@ -349,7 +346,7 @@ impl GraphicsObject for ChessGame {
 
             // Create a vector of each possible piece
             let mut squares: Vec<usize> = Vec::new();
-            while (possible_pieces != 0) {
+            while possible_pieces != 0 {
                 squares.push(bitboard::pop(&mut possible_pieces));
             }
 
@@ -362,7 +359,7 @@ impl GraphicsObject for ChessGame {
                 
                 let mut targets_bb = self.square_possible_targets(*sq);
                 let mut targets: Vec<usize> = Vec::new();
-                while (targets_bb != 0) {
+                while targets_bb != 0 {
                     targets.push(bitboard::pop(&mut targets_bb));
                 }
                 let tgt = targets.choose(&mut rng).unwrap();

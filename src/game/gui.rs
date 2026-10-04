@@ -135,7 +135,7 @@ impl ChessGui {
 
     fn handle_events(&mut self, e: &Event) {
 
-        if (self.state.current_scene != self.state.next_scene) {
+        if self.state.current_scene != self.state.next_scene {
             if self.state.next_scene == 1 {
                 self.game = ChessGame::new(&self.gui, self.state.chosen_players[0], self.state.chosen_players[1]);
             }

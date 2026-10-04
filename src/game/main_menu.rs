@@ -2,7 +2,7 @@ use piston::{Event, MouseButton};
 use piston_window::*;
 
 use crate::game::button::Button;
-use crate::game::game::Player::{self, LocalPlayer};
+use crate::game::game::Player;
 use crate::game::gui::*;
 
 const BACKGROUND: [f32; 4] = [0.7, 0.5, 0.5, 1.0];
@@ -27,13 +27,13 @@ impl MainMenu {
 
 impl GraphicsObject for MainMenu {
     fn render(&mut self, e: &Event, state: &State, gui: &mut Gui) {
-        gui.window.draw_2d(e, |c, g, _| {
+        gui.window.draw_2d(e, |_c, g, _| {
             clear(BACKGROUND, g);
         });
         self.play_local_button.render(e, state, gui);
         self.play_bot_button.render(e, state, gui);
     }
-    fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui) {
+    fn on_click(&mut self, _button: &MouseButton, state: &mut State, gui: &Gui) {
         if self.play_local_button.is_mouse_over_button(gui.cursor) {
             state.next_scene = 1;
             state.chosen_players = [Player::LocalPlayer, Player::LocalPlayer];
@@ -44,7 +44,7 @@ impl GraphicsObject for MainMenu {
             state.chosen_players = [Player::LocalPlayer, Player::Bot];
         }
     }
-    fn update(&mut self, state: &mut State, gui: &Gui) {
+    fn update(&mut self, _state: &mut State, _gui: &Gui) {
 
     }
 }
