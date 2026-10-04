@@ -76,13 +76,16 @@ impl ResourceManager {
         self.textures.insert(fname, tex);
     }
 
-    pub fn get_texture(&mut self, name: &str) -> Rc<G2dTexture> {
+    pub fn get_texture(&self, name: &str) -> Rc<G2dTexture> {
         let tex = self.textures.get(&name.to_string());
 
         // Either return the requested texture OR the default texture if name is invalid
         let tex = match tex {
             Some (tex) => tex,
-            None => self.textures.get(&"default".to_string()).unwrap(),
+            None => {
+                println!("Failed to retrieve Texture"); 
+                self.textures.get(&"default".to_string()).unwrap()
+            },
         };
         return tex.clone();
     }   

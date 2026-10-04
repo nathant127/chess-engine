@@ -1,4 +1,4 @@
 pub mod notation;
 pub mod game;
-pub mod gui_game;
+pub mod gui;
 pub mod resource_manager;

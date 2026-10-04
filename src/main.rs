@@ -1,4 +1,4 @@
-use chess_engine::game::gui_game::ChessGui;
+use chess_engine::game::gui::ChessGui;
 
 
 fn main() {
