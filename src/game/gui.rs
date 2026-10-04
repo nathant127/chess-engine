@@ -16,6 +16,7 @@ use piston::input::RenderEvent;
 use piston::window::WindowSettings;
 
 use crate::game::game::ChessGame;
+use crate::game::main_menu::MainMenu;
 use super::resource_manager::ResourceManager;
 
 
@@ -24,7 +25,7 @@ pub struct State {
     
 }
 
-pub trait GameScene {
+pub trait GraphicsObject {
     fn render(&mut self, e: &Event, state: &State, gui: &mut Gui);
     fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui);
 }
@@ -46,6 +47,7 @@ pub struct ChessGui {
     gui: Gui,
 
     game: ChessGame,
+    main_menu: MainMenu
 
 }
 
@@ -85,6 +87,7 @@ impl ChessGui {
             gui: gui,
             
             game: game,
+            main_menu: MainMenu::new(),
         };
 
         return chess_gui;
@@ -99,11 +102,13 @@ impl ChessGui {
     fn render(&mut self, e: &Event) {
         let args = e.render_args().unwrap();
         self.gui.window_size = args.window_size;
-        self.game.render(e, &self.state, &mut self.gui);
+        // self.game.render(e, &self.state, &mut self.gui);
+        self.main_menu.render(e, &self.state, &mut self.gui);
     }
 
     fn on_click(&mut self, button: &MouseButton) {
-        self.game.on_click(button, &mut self.state, &mut self.gui);        
+        // self.game.on_click(button, &mut self.state, &self.gui);        
+        self.main_menu.on_click(button, &mut self.state,  &self.gui);
 
     }
 

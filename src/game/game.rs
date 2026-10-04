@@ -6,7 +6,7 @@ use sprite::*;
 use crate::board_rep::bitboard::{self, BitBoard};
 use crate::board_rep::board::*;
 use crate::board_rep::constants::{Piece, Colour};
-use crate::game::gui::{GameScene, Gui, State};
+use crate::game::gui::*;
 use uuid::Uuid;
 
 struct SceneMetaData {
@@ -221,7 +221,7 @@ impl ChessGame {
 }
 
 
-impl GameScene for ChessGame {
+impl GraphicsObject for ChessGame {
     fn render(&mut self, e: &Event, state: &State, gui: &mut Gui) {
         use graphics::*;
         let args = e.render_args().unwrap();
