@@ -303,7 +303,7 @@ impl GraphicsObject for ChessGame {
         
 
         if self.exit_button.is_mouse_over_button(gui.cursor) {
-            state.current_scene = 0;
+            state.next_scene = 0;
         }
     }
 }

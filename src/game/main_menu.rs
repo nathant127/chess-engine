@@ -32,7 +32,7 @@ impl GraphicsObject for MainMenu {
     }
     fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui) {
         if self.test_button.is_mouse_over_button(gui.cursor) {
-            state.current_scene = 1;
+            state.next_scene = 1;
         }
     }
 }

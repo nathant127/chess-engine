@@ -22,6 +22,7 @@ use super::resource_manager::ResourceManager;
 
 pub struct State {
     pub current_scene: i64,
+    pub next_scene: i64,
 }
 
 pub trait GraphicsObject {
@@ -83,7 +84,7 @@ impl ChessGui {
         let game = ChessGame::new(&gui);
 
         let chess_gui = ChessGui { 
-            state: State {current_scene: 0},
+            state: State {current_scene: 0, next_scene: 0},
             
             gui: gui,
             
@@ -122,6 +123,15 @@ impl ChessGui {
     }
 
     fn update(&mut self, e: &Event) {
+
+        if (self.state.current_scene != self.state.next_scene) {
+            if self.state.next_scene == 1 {
+                self.game = ChessGame::new(&self.gui);
+            }
+
+            self.state.current_scene = self.state.next_scene;
+        }
+
         if let Some(_args) = e.render_args() {
             self.render(&e);
         }
