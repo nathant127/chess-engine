@@ -20,9 +20,8 @@ use crate::game::main_menu::MainMenu;
 use super::resource_manager::ResourceManager;
 
 
-
 pub struct State {
-    
+    pub current_scene: i64,
 }
 
 pub trait GraphicsObject {
@@ -78,11 +77,13 @@ impl ChessGui {
         if let Err(e) = result {
             println!("Failed to find the assets folder, is it included with the executable? {e}");
         }
+
+        gui.resource_manager.add_font("assets/fonts/Montserrat/Montserrat-VariableFont_wght.ttf", &mut gui.window);
         
         let game = ChessGame::new(&gui);
 
         let chess_gui = ChessGui { 
-            state: State {},
+            state: State {current_scene: 0},
             
             gui: gui,
             
@@ -102,13 +103,21 @@ impl ChessGui {
     fn render(&mut self, e: &Event) {
         let args = e.render_args().unwrap();
         self.gui.window_size = args.window_size;
-        // self.game.render(e, &self.state, &mut self.gui);
-        self.main_menu.render(e, &self.state, &mut self.gui);
+
+        match self.state.current_scene {
+            0 => self.main_menu.render(e, &self.state, &mut self.gui),
+            1 => self.game.render(e, &self.state, &mut self.gui),
+            _ => {},
+        }
+        
     }
 
     fn on_click(&mut self, button: &MouseButton) {
-        // self.game.on_click(button, &mut self.state, &self.gui);        
-        self.main_menu.on_click(button, &mut self.state,  &self.gui);
+        match self.state.current_scene {
+            0 => self.main_menu.on_click(button, &mut self.state,  &self.gui),
+            1 => self.game.on_click(button, &mut self.state, &self.gui),
+            _ => {},
+        }       
 
     }
 

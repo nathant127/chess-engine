@@ -4,16 +4,20 @@ use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::collections::HashMap;
 
-use piston_window::G2dTexture;
+use piston_window::{G2dTexture, Glyphs};
 use std::rc::Rc;
+use std::cell::RefCell;
 use std::fs;
 
 use piston_window::*;
 
+type Font = Rc<RefCell<Glyphs>>;
+
 pub(super) struct ResourceManager {
     resource_folders: Vec<PathBuf>,
     texture_context: G2dTextureContext,
-    textures: HashMap<String, Rc<G2dTexture>>
+    textures: HashMap<String, Rc<G2dTexture>>,
+    fonts: HashMap<String, Rc<RefCell<Glyphs>>>,
 }
 
 impl ResourceManager {
@@ -21,7 +25,8 @@ impl ResourceManager {
         let mut man = ResourceManager {
             resource_folders: Vec::new(), 
             texture_context: texture_context,
-            textures: HashMap::new()
+            textures: HashMap::new(),
+            fonts: HashMap::new(),
         };
         // Adds an empty texture in to be used as a default return
         man.textures.insert("default".to_string(), Rc::new(G2dTexture::empty(&mut man.texture_context).unwrap()));
@@ -88,5 +93,31 @@ impl ResourceManager {
             },
         };
         return tex.clone();
-    }   
+    }
+
+    pub fn add_font(&mut self, path: &str, window: &mut PistonWindow) {
+        let font = Rc::new(RefCell::new( 
+            window.load_font(path).expect("Failed to load font")
+        ));
+
+        let fname = PathBuf::from(path).file_name().unwrap().to_os_string().into_string().unwrap();
+
+        println!("added {fname}");
+
+        self.fonts.insert(fname, font);
+    }
+
+    pub fn get_font(&self, name: &str) -> Font {
+        let font = self.fonts.get(&name.to_string());
+
+        // Either return the requested texture OR the default texture if name is invalid
+        let font = match font {
+            Some (font) => font,
+            None => {
+                println!("Failed to retrieve Texture"); 
+                self.fonts.get(&"default".to_string()).unwrap()
+            },
+        };
+        return font.clone();
+    }
 }

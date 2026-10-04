@@ -1,12 +1,7 @@
 use piston::{Event, MouseButton};
-use piston::input::RenderEvent;
 use piston_window::*;
-use sprite::*;
 
-use crate::board_rep::bitboard::{self, BitBoard};
-use crate::board_rep::board::*;
-use crate::board_rep::constants::{Piece, Colour};
-use crate::game::{button, gui::*};
+use crate::game::gui::*;
 
 
 pub struct Button {
@@ -22,9 +17,9 @@ pub struct Button {
 type Rectangle = [f64;4];
 
 impl Button {
-    pub fn new(text: String, centre: [f64; 2], side_len: [f64; 2], colour: [f32; 4], hover_colour: [f32; 4]) -> Button{
+    pub fn new(text: &str, centre: [f64; 2], side_len: [f64; 2], colour: [f32; 4], hover_colour: [f32; 4]) -> Button{
         let button = Button {
-            text: text,
+            text: text.to_string(),
             pos: centre,
             bounds: [side_len[0] / 2.0, side_len[1] / 2.0],
             colour: colour,
@@ -45,18 +40,37 @@ impl Button {
 
 impl GraphicsObject for Button {
     fn render(&mut self, e: &Event, state: &State, gui: &mut Gui) {
-        gui.window.draw_2d(e, |c, g, _| {
+        let hovered = self.is_mouse_over_button(gui.cursor);
+        let colour = if hovered { self.hover_colour } else { self.colour };
 
-            let transform = c.transform;
+        let font_size: u32 = 24;
+        let text_colour = [1.0, 1.0, 1.0, 1.0];
 
-            let colour = match self.is_mouse_over_button(gui.cursor) {
-                true => self.hover_colour,
-                false => self.colour,
-            };
+        let font_ptr = gui.resource_manager.get_font("Montserrat-VariableFont_wght.ttf");
+        let mut font = font_ptr.borrow_mut();
+
+        gui.window.draw_2d(e, |c, g, device| {
+            rectangle(colour, self.rect, c.transform, g);
+
+            // Measure the text so we can centre it horizontally
+            let width = font.width(font_size, &self.text).unwrap_or(0.0);
+
+            // Text is drawn with its *baseline* at the transform origin,
+            // so nudge down by roughly a third of the font size to centre vertically
+            let transform = c.transform.trans(
+                self.pos[0] - width / 2.0,
+                self.pos[1] + font_size as f64 / 3.0,
+            );
             
-            rectangle(colour, self.rect,  transform, g);
+            text::Text::new_color(text_colour, font_size)
+                .draw(&self.text, &mut *font, &c.draw_state, transform, g)
+                .unwrap();
+
+            // Required: uploads the glyph textures to the GPU
+            font.factory.encoder.flush(device);
         });
     }
+
     fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui) {
 
     }

@@ -6,6 +6,7 @@ use sprite::*;
 use crate::board_rep::bitboard::{self, BitBoard};
 use crate::board_rep::board::*;
 use crate::board_rep::constants::{Piece, Colour};
+use crate::game::button::Button;
 use crate::game::gui::*;
 use uuid::Uuid;
 
@@ -27,6 +28,8 @@ pub struct ChessGame {
     highlights: [bool; 64],
     selected_piece_square: Option<usize>,
     squares: [Rectangle; 64],
+
+    exit_button: Button,
 }
 
 impl ChessGame {
@@ -41,6 +44,8 @@ impl ChessGame {
             highlights: [false; 64], 
             selected_piece_square: None,
             squares: ChessGame::init_board_squares(),
+
+            exit_button: Button::new("X", [25.0, 25.0], [50.0, 50.0], [1.0, 0.0, 0.0, 1.0], [0.7, 0.0, 0.0, 1.0]),
         };
 
         game.create_initial_scene(gui);
@@ -263,6 +268,8 @@ impl GraphicsObject for ChessGame {
 
             self.scene.draw(transform, g);
         });
+
+        self.exit_button.render(e, state, gui);
     }
     fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui) {
         // Check if clicked on board, if so handle it
@@ -292,7 +299,11 @@ impl GraphicsObject for ChessGame {
         }
         else {
             self.selected_piece_square = None;
-            return;
+        }
+        
+
+        if self.exit_button.is_mouse_over_button(gui.cursor) {
+            state.current_scene = 0;
         }
     }
 }
