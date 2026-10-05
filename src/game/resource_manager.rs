@@ -102,8 +102,6 @@ impl ResourceManager {
 
         let fname = PathBuf::from(path).file_name().unwrap().to_os_string().into_string().unwrap();
 
-        println!("added {fname}");
-
         self.fonts.insert(fname, font);
     }
 
