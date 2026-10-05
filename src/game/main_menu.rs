@@ -10,6 +10,7 @@ const BACKGROUND: [f32; 4] = [0.7, 0.5, 0.5, 1.0];
 pub struct MainMenu {
     play_local_button: Button,
     play_bot_button: Button,
+    play_multi_button: Button,
 }
 impl MainMenu {
     pub fn new() -> MainMenu {
@@ -18,6 +19,7 @@ impl MainMenu {
         let mm = MainMenu {
             play_local_button: Button::new("Play Local", [80.0, 30.0], [150.0, 50.0], COLOUR, HOVER_COLOUR),
             play_bot_button: Button::new("Play Bot", [80.0, 90.0], [150.0, 50.0], COLOUR, HOVER_COLOUR),
+            play_multi_button: Button::new("Play Multiplayer", [80.0, 150.0], [150.0, 50.0], COLOUR, HOVER_COLOUR),
 
         };
 
@@ -32,6 +34,7 @@ impl GraphicsObject for MainMenu {
         });
         self.play_local_button.render(e, state, gui);
         self.play_bot_button.render(e, state, gui);
+        self.play_multi_button.render(e, state, gui);
     }
     fn on_click(&mut self, _button: &MouseButton, state: &mut State, gui: &Gui) {
         if self.play_local_button.is_mouse_over_button(gui.cursor) {
@@ -42,6 +45,11 @@ impl GraphicsObject for MainMenu {
         if self.play_bot_button.is_mouse_over_button(gui.cursor) {
             state.next_scene = 1;
             state.chosen_players = [Player::LocalPlayer, Player::Bot];
+        }
+
+        if self.play_multi_button.is_mouse_over_button(gui.cursor) {
+            state.next_scene = 1;
+            state.chosen_players = [Player::LocalPlayer, Player::RemotePlayer];
         }
     }
     fn update(&mut self, _state: &mut State, _gui: &Gui) {
