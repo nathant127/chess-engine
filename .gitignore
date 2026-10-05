@@ -19,3 +19,5 @@ target/
 .vscode
 chess_engine_release/
 *.zip
+
+*.bin

@@ -61,7 +61,7 @@ impl ChessGame {
     pub fn new(gui: &Gui, white_player: Player, black_player: Player) -> ChessGame {
         
         let net_client = if white_player == Player::RemotePlayer || black_player == Player::RemotePlayer {
-            Some(ChessClient::new("127.0.0.1".to_string()).unwrap())
+            Some(ChessClient::new("127.0.0.1:25800".to_string()).unwrap())
         }
         else {
             None
