@@ -112,8 +112,11 @@ impl ChessClient {
 
             if writer.write_all(&msg_buf.as_slice()).await.is_err() {
                 let _ = rx_send.send(Message::Error("Failed to send message".to_string()));
+                break;
             }
         }
+
+        let _ = rx_send.send(Message::Disconnected);
     }
 
     async fn rx_worker(mut reader: tokio::net::tcp::OwnedReadHalf, rx_send: mpsc::UnboundedSender<Message>) {
@@ -121,7 +124,7 @@ impl ChessClient {
             let mut header: [u8; 3] = [0,0,0];
             if reader.read_exact(&mut header).await.is_err() {
                 let _ = rx_send.send(Message::Error("Failed to read header".to_string()));
-                continue;
+                break;
             }
 
             if header[0] != MSG_MAGIC_NUM[0] || header[1] != MSG_MAGIC_NUM[1] {
@@ -134,7 +137,7 @@ impl ChessClient {
                     let mut turn_buf: [u8; 4] = [0; 4];
                     if reader.read_exact(&mut turn_buf).await.is_err() {
                         let _ = rx_send.send(Message::Error("Failed to read body".to_string()));
-                        continue;
+                        break;
                     }
                     let _ = rx_send.send(Message::StartGame(i32::from_be_bytes(turn_buf)));
                 },
@@ -142,7 +145,7 @@ impl ChessClient {
                     let mut rd_buf: [u8; 16] = [0; 16];
                     if reader.read_exact(&mut rd_buf).await.is_err() {
                         let _ = rx_send.send(Message::Error("Failed to read body".to_string()));
-                        continue;
+                        break;
                     }
 
                     let (org_slice, tgt_slice) = rd_buf.split_at(size_of::<usize>());
@@ -160,6 +163,8 @@ impl ChessClient {
                 }
             }
         }
+
+        let _ = rx_send.send(Message::Disconnected);
     }
 
     pub fn request_match(&self, pass: &str) {

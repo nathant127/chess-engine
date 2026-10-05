@@ -10,6 +10,7 @@ use crate::board_rep::board::*;
 use crate::board_rep::constants::{Piece, Colour};
 use crate::game::button::Button;
 use crate::game::gui::*;
+use crate::game::networking::{ChessClient, Message};
 use uuid::Uuid;
 
 struct SceneMetaData {
@@ -42,6 +43,7 @@ pub struct ChessGame {
     turn: u32,
     white_player: Player,
     black_player: Player,
+    in_game: bool,
 
     scene: Scene<G2dTexture>,
     scene_metadata: Vec<SceneMetaData>,
@@ -51,16 +53,26 @@ pub struct ChessGame {
     squares: [Rectangle; 64],
 
     exit_button: Button,
+
+    net_client: Option<ChessClient>
 }
 
 impl ChessGame {
     pub fn new(gui: &Gui, white_player: Player, black_player: Player) -> ChessGame {
-        println!("white: {white_player}, black: {black_player}");
+        
+        let net_client = if white_player == Player::RemotePlayer || black_player == Player::RemotePlayer {
+            Some(ChessClient::new("127.0.0.1".to_string()).unwrap())
+        }
+        else {
+            None
+        };
+
         let mut game  = ChessGame {
             board: Board::default(),
             turn: 0,
             white_player: white_player,
             black_player: black_player,
+            in_game: false,
 
             scene: Scene::new(),
             scene_metadata: Vec::new(),
@@ -70,6 +82,8 @@ impl ChessGame {
             squares: ChessGame::init_board_squares(),
 
             exit_button: Button::new("X", [25.0, 25.0], [50.0, 50.0], [1.0, 0.0, 0.0, 1.0], [0.7, 0.0, 0.0, 1.0]),
+
+            net_client: net_client,
         };
 
         game.create_initial_scene(gui);
@@ -81,7 +95,7 @@ impl ChessGame {
         return self.board;
     }
 
-    pub fn try_move(&mut self, mov: &Move) -> Option<[bool; 6]> {
+    pub fn try_move(&mut self, mov: Move) -> Option<[bool; 6]> {
         if self.is_move_valid( mov) == false {
             return None;
         }
@@ -104,11 +118,11 @@ impl ChessGame {
 
         self.turn += 1;
 
-        self.update_with_move(&mov, special_actions);
+        self.update_with_move(mov, special_actions);
         return Some(special_actions);
     }
 
-    pub fn is_move_valid(&mut self, mov: &Move) -> bool {
+    pub fn is_move_valid(&mut self, mov: Move) -> bool {
         let (piece, colour) = match get_piece_at_square(mov.org_square, self.board) {
             Some(pc) => pc,
             None => return false
@@ -226,7 +240,7 @@ impl ChessGame {
         return None;
     }
 
-    fn update_with_move(&mut self, mov: &Move, special_actions: [bool; 6]) {
+    fn update_with_move(&mut self, mov: Move, special_actions: [bool; 6]) {
         
         // Remove captured piece
         if special_actions[SpecialActions::Capture as usize] == true {
@@ -248,6 +262,19 @@ impl ChessGame {
             }
         }
 
+        if let Some(nc) = &self.net_client {
+            nc.send_move(mov);
+        }
+
+    }
+
+    fn cur_player(&self) -> Player {
+        if self.turn % 2 == 0 {
+            self.white_player
+        }
+        else {
+            self.black_player
+        }
     }
 }
 
@@ -298,9 +325,20 @@ impl GraphicsObject for ChessGame {
         self.exit_button.render(e, state, gui);
     }
     fn on_click(&mut self, _button: &MouseButton, state: &mut State, gui: &Gui) {
+
+        if self.exit_button.is_mouse_over_button(gui.cursor) {
+            state.next_scene = 0;
+        }
+
+        // If we are in multiplayer, but not connected yet, dont let player touch board
+        if let Some(_) = self.net_client  {
+            if self.in_game == false {
+                return;
+            }
+        }
         
         // If the current player is a local player
-        if (self.white_player == Player::LocalPlayer && self.turn % 2 == 0) ||(self.black_player == Player::LocalPlayer && self.turn % 2 == 1) {
+        if self.cur_player() == Player::LocalPlayer {
 
             // Check if they clicked on board, and if so what board they clicked on
             let (x_board_frame, y_board_frame) = (gui.cursor[0] - gui.window_size[0] / 2.0, gui.cursor[1] - gui.window_size[1] / 2.0);
@@ -315,7 +353,7 @@ impl GraphicsObject for ChessGame {
                         tgt_square: clicked_square, 
                     };
 
-                    self.try_move(&mov);
+                    self.try_move(mov);
                     self.selected_piece_square = None;
                     return;
                 }
@@ -329,14 +367,53 @@ impl GraphicsObject for ChessGame {
             }
         }
         
-
-        if self.exit_button.is_mouse_over_button(gui.cursor) {
-            state.next_scene = 0;
-        }
     }
 
-    fn update(&mut self, _state: &mut State, _gui: &Gui) {
-        if (self.white_player == Player::Bot && self.turn % 2 == 0) ||(self.black_player == Player::Bot && self.turn % 2 == 1) {
+    fn update(&mut self, state: &mut State, _gui: &Gui) {
+
+        
+        // Handle multiplayer connection
+        while let Some(msg) = self.net_client.as_mut().and_then(|nc| nc.poll_events()) {
+            match msg {
+                Message::Connected => {
+                    self.net_client.as_ref().unwrap().request_match("apple");
+                },
+                Message::Error(e) => {
+                    println!("{e}");
+                },
+                Message::Disconnected => {
+                    self.in_game = false;
+                    state.next_scene = 0;
+                },
+                Message::EndMatch => {
+                    self.in_game = false;
+                    state.next_scene = 0;
+                },
+                Message::StartGame(turn) => {
+                    self.in_game = true;
+                    if turn == 0 {
+                        self.white_player = Player::LocalPlayer;
+                        self.black_player = Player::RemotePlayer;
+                    }
+                    else {
+                        self.white_player = Player::RemotePlayer;
+                        self.black_player = Player::LocalPlayer;
+                    }
+                },
+                Message::Move(mov) => {
+                    if self.in_game == true && self.cur_player() == Player::RemotePlayer {
+                        self.try_move(mov);
+                    }
+                },
+                _ => {
+                    println!("Can't handle that message type");
+                }
+            }
+        }
+        
+
+        // Handle bot players
+        if self.cur_player() == Player::Bot {
             // Get the pieces that correspond to the current turn
             let mut possible_pieces = match self.turn % 2 {
                 0 => white(&self.board),
@@ -368,7 +445,7 @@ impl GraphicsObject for ChessGame {
                     org_square: *sq,
                     tgt_square: *tgt,
                 };
-                self.try_move(&mov);
+                self.try_move(mov);
             }
         }
     }
@@ -384,7 +461,7 @@ pub enum SpecialActions {
     Promotion,
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Clone, Copy)]
 pub struct Move {
     pub org_square: usize,
     pub tgt_square: usize,
