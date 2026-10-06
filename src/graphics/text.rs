@@ -2,7 +2,6 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::graphics::graphics::*;
 use piston::{Event, MouseButton};
-use crate::game::gui::State;
 use piston_window::*;
 
 use crate::graphics::resource_manager::RESOURCE_MANAGER;

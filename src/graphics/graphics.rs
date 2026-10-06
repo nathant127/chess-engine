@@ -1,4 +1,3 @@
-use crate::game::gui::State;
 use graphics::types;
 use piston_window::{PistonWindow, Event, MouseButton};
 

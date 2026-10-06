@@ -1,6 +1,5 @@
 use crate::graphics::{graphics::*, text::Text};
 use piston::{Event, MouseButton};
-use crate::game::gui::State;
 use piston_window::*;
 
 
@@ -12,12 +11,14 @@ pub struct Button {
     hover_colour: [f32; 4],
 
     rect: types::Rectangle,
+
+    callback: fn()
 }
 
 
 
 impl Button {
-    pub fn new(text: &str, top_left: [f64; 2], padding: [f64; 2], colour: [f32; 4], hover_colour: [f32; 4]) -> Button{
+    pub fn new(text: &str, top_left: [f64; 2], padding: [f64; 2], colour: [f32; 4], hover_colour: [f32; 4], callback: fn()) -> Button {
 
         // let text_origin = [top_left[0] + padding[0], top_left[1] + padding[1]];
         let text_origin = [top_left[0] + padding[0], top_left[1] + padding[1]];
@@ -35,6 +36,7 @@ impl Button {
             hover_colour: hover_colour,
 
             rect: [top_left[0], top_left[1], width, height],
+            callback: callback,
         };
 
         return button;
@@ -58,8 +60,10 @@ impl GraphicsObject for Button {
         self.text.render(e, gui);
     }
 
-    fn on_click(&mut self, _button: &MouseButton, _gui: &Gui) {
-
+    fn on_click(&mut self, _button: &MouseButton, gui: &Gui) {
+        if self.is_mouse_over_button(gui.cursor) {
+            (self.callback)();
+        }
     }
 
     fn update(&mut self, _gui: &Gui) {

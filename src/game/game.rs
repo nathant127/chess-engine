@@ -7,7 +7,7 @@ use sprite::*;
 
 use crate::board_rep::bitboard::{self, BitBoard};
 use crate::board_rep::board::*;
-use crate::board_rep::constants::{Piece, Colour};
+use crate::board_rep::constants::{Colour};
 use crate::graphics::button::Button;
 use crate::game::gui::*;
 use crate::game::networking::{ChessClient, Message};
@@ -89,7 +89,9 @@ impl ChessGame {
             selected_piece_square: None,
             squares: ChessGame::init_board_squares(),
 
-            exit_button: Button::new("X", [0.0, 0.0], [25.0, 25.0], [1.0, 0.0, 0.0, 1.0], [0.7, 0.0, 0.0, 1.0]),
+            exit_button: Button::new("X", [0.0, 0.0], [25.0, 25.0], [1.0, 0.0, 0.0, 1.0], [0.7, 0.0, 0.0, 1.0], || {
+                GAME_STATE.with_borrow_mut(|s| s.next_scene = 0);
+            }),
 
             net_client: net_client,
         };
