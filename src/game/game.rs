@@ -8,10 +8,12 @@ use sprite::*;
 use crate::board_rep::bitboard::{self, BitBoard};
 use crate::board_rep::board::*;
 use crate::board_rep::constants::{Piece, Colour};
-use crate::game::button::Button;
+use crate::graphics::button::Button;
 use crate::game::gui::*;
 use crate::game::networking::{ChessClient, Message};
 use uuid::Uuid;
+
+use crate::graphics::graphics::*;
 
 struct SceneMetaData {
     id: Uuid,

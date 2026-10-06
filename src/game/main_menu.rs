@@ -1,9 +1,11 @@
 use piston::{Event, MouseButton};
 use piston_window::*;
 
-use crate::game::button::Button;
+use crate::graphics::graphics::GraphicsObject;
+use crate::graphics::button::Button;
 use crate::game::game::Player;
-use crate::game::gui::*;
+use crate::game::gui::State;
+use crate::graphics::graphics::*;
 
 const BACKGROUND: [f32; 4] = [0.7, 0.5, 0.5, 1.0];
 
