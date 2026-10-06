@@ -13,28 +13,39 @@ use piston_window::*;
 
 type Font = Rc<RefCell<Glyphs>>;
 
+thread_local! {
+    pub static RESOURCE_MANAGER: RefCell<ResourceManager> = RefCell::new(ResourceManager::new());
+}
+
 pub struct ResourceManager {
     resource_folders: Vec<PathBuf>,
-    texture_context: G2dTextureContext,
+    texture_context: Option<G2dTextureContext>,
     textures: HashMap<String, Rc<G2dTexture>>,
     fonts: HashMap<String, Rc<RefCell<Glyphs>>>,
 }
 
 impl ResourceManager {
-    pub fn new(texture_context: G2dTextureContext) -> ResourceManager {
-        let mut man = ResourceManager {
+    pub fn new() -> ResourceManager {
+        let man = ResourceManager {
             resource_folders: Vec::new(), 
-            texture_context: texture_context,
+            texture_context: None,
             textures: HashMap::new(),
             fonts: HashMap::new(),
-        };
-        // Adds an empty texture in to be used as a default return
-        man.textures.insert("default".to_string(), Rc::new(G2dTexture::empty(&mut man.texture_context).unwrap()));
+        };        
         return man;
+    }
+
+    pub fn init(&mut self, tex_context: G2dTextureContext) {
+        self.texture_context = Some(tex_context);
+        // Adds an empty texture in to be used as a default return
+        self.textures.insert("default".to_string(), Rc::new(G2dTexture::empty(&mut self.texture_context.as_mut().unwrap()).unwrap()));
     }
 
     /** Adds all valid files within folder into Resource Manager */
     pub fn add_folder(&mut self, folder: &str) -> Result<(), String> {
+        if self.texture_context.is_none() {
+            return Err("Uninitialized".to_string());
+        }
         let resource_folder = 
         match find_folder::Search::ParentsThenKids(3, 3).for_folder(folder) {
             Ok(folder) => folder,
@@ -61,10 +72,13 @@ impl ResourceManager {
     }
 
     fn add_texture(&mut self, path: &PathBuf) {
-
+        if self.texture_context.is_none() {
+            println!("Uninitialized");
+            return;
+        }
         let tex: Rc<G2dTexture> = Rc::new( 
             match G2dTexture::from_path(
-                &mut self.texture_context,
+                &mut self.texture_context.as_mut().unwrap(),
                 path,
                 Flip::None,
                 &TextureSettings::new()) {

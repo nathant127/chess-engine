@@ -1,9 +1,7 @@
 use crate::game::gui::State;
-use crate::graphics::resource_manager::ResourceManager;
 use piston_window::{PistonWindow, Event, MouseButton};
 
 pub struct Gui {
-    pub resource_manager: ResourceManager,
     pub window: PistonWindow,
 
     pub cursor: [f64; 2],

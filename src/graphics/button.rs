@@ -3,6 +3,8 @@ use piston::{Event, MouseButton};
 use crate::game::gui::State;
 use piston_window::*;
 
+use crate::graphics::resource_manager::RESOURCE_MANAGER;
+
 
 
 
@@ -13,10 +15,10 @@ pub struct Button {
     colour: [f32; 4],
     hover_colour: [f32; 4],
 
-    rect: Rectangle,
+    rect: types::Rectangle,
 }
 
-type Rectangle = [f64;4];
+
 
 impl Button {
     pub fn new(text: &str, centre: [f64; 2], side_len: [f64; 2], colour: [f32; 4], hover_colour: [f32; 4]) -> Button{
@@ -48,7 +50,9 @@ impl GraphicsObject for Button {
         let font_size: u32 = 24;
         let text_colour = [1.0, 1.0, 1.0, 1.0];
 
-        let font_ptr = gui.resource_manager.get_font("Montserrat-VariableFont_wght.ttf");
+        let font_ptr = RESOURCE_MANAGER.with_borrow(|r| 
+            r.get_font("Montserrat-VariableFont_wght.ttf")
+        );
         let mut font = font_ptr.borrow_mut();
 
         gui.window.draw_2d(e, |c, g, device| {

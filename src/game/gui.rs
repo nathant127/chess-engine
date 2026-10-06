@@ -19,7 +19,7 @@ use crate::game::game::{ChessGame, Player};
 use crate::game::main_menu::MainMenu;
 
 use crate::graphics::graphics::*;
-use crate::graphics::resource_manager::ResourceManager;
+use crate::graphics::resource_manager::RESOURCE_MANAGER;
 
 
 pub struct State {
@@ -62,19 +62,22 @@ impl ChessGui {
         };
 
         let mut gui = Gui {
-            resource_manager: ResourceManager::new(texture_context),
             window: window,
             cursor: [0.0, 0.0], 
             window_size: [0.0, 0.0],
         };
-        let result = gui.resource_manager.add_folder("assets");
-        if let Err(e) = result {
-            println!("Failed to find the assets folder, is it included with the executable? {e}");
-        }
 
-        gui.resource_manager.add_font("assets/fonts/Montserrat/Montserrat-VariableFont_wght.ttf", &mut gui.window);
+        RESOURCE_MANAGER.with_borrow_mut(|r|
+            {
+                r.init(texture_context);
+                if let Err(e) = r.add_folder("assets") {
+                    println!("Failed to find the assets folder, is it included with the executable? {e}");
+                }
+                r.add_font("assets/fonts/Montserrat/Montserrat-VariableFont_wght.ttf", &mut gui.window);
+            }
+        );
         
-        let game = ChessGame::new(&gui, Player::LocalPlayer, Player::LocalPlayer);
+        let game = ChessGame::new(Player::LocalPlayer, Player::LocalPlayer);
 
         let chess_gui = ChessGui { 
             state: State {current_scene: 0, next_scene: 0, chosen_players: [Player::LocalPlayer, Player::LocalPlayer]},
@@ -127,7 +130,7 @@ impl ChessGui {
 
         if self.state.current_scene != self.state.next_scene {
             if self.state.next_scene == 1 {
-                self.game = ChessGame::new(&self.gui, self.state.chosen_players[0], self.state.chosen_players[1]);
+                self.game = ChessGame::new(self.state.chosen_players[0], self.state.chosen_players[1]);
             }
 
             self.state.current_scene = self.state.next_scene;

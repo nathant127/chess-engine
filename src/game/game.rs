@@ -14,6 +14,7 @@ use crate::game::networking::{ChessClient, Message};
 use uuid::Uuid;
 
 use crate::graphics::graphics::*;
+use crate::graphics::resource_manager::RESOURCE_MANAGER;
 
 struct SceneMetaData {
     id: Uuid,
@@ -60,7 +61,7 @@ pub struct ChessGame {
 }
 
 impl ChessGame {
-    pub fn new(gui: &Gui, white_player: Player, black_player: Player) -> ChessGame {
+    pub fn new(white_player: Player, black_player: Player) -> ChessGame {
         
         let net_client = if white_player == Player::RemotePlayer || black_player == Player::RemotePlayer {
             Some(ChessClient::new("127.0.0.1:25800".to_string()).unwrap())
@@ -88,7 +89,7 @@ impl ChessGame {
             net_client: net_client,
         };
 
-        game.create_initial_scene(gui);
+        game.create_initial_scene();
 
         return game;
     }
@@ -164,24 +165,25 @@ impl ChessGame {
         return legal_targets(square, piece, colour, &self.board);
     }
 
-    fn create_initial_scene(&mut self, gui: &Gui){
-        self.fill_scene_piece(self.board.pw, "white_pawn.png", gui);
-        self.fill_scene_piece(self.board.nw, "white_knight.png", gui);
-        self.fill_scene_piece(self.board.bw, "white_bishop.png", gui);
-        self.fill_scene_piece(self.board.rw, "white_rook.png", gui);
-        self.fill_scene_piece(self.board.qw, "white_queen.png", gui);
-        self.fill_scene_piece(self.board.kw, "white_king.png", gui);
+    fn create_initial_scene(&mut self){
+        self.fill_scene_piece(self.board.pw, "white_pawn.png");
+        self.fill_scene_piece(self.board.nw, "white_knight.png");
+        self.fill_scene_piece(self.board.bw, "white_bishop.png");
+        self.fill_scene_piece(self.board.rw, "white_rook.png");
+        self.fill_scene_piece(self.board.qw, "white_queen.png");
+        self.fill_scene_piece(self.board.kw, "white_king.png");
 
-        self.fill_scene_piece(self.board.pb, "black_pawn.png", gui);
-        self.fill_scene_piece(self.board.nb, "black_knight.png", gui);
-        self.fill_scene_piece(self.board.bb, "black_bishop.png", gui);
-        self.fill_scene_piece(self.board.rb, "black_rook.png", gui);
-        self.fill_scene_piece(self.board.qb, "black_queen.png", gui);
-        self.fill_scene_piece(self.board.kb, "black_king.png", gui);
+        self.fill_scene_piece(self.board.pb, "black_pawn.png");
+        self.fill_scene_piece(self.board.nb, "black_knight.png");
+        self.fill_scene_piece(self.board.bb, "black_bishop.png");
+        self.fill_scene_piece(self.board.rb, "black_rook.png");
+        self.fill_scene_piece(self.board.qb, "black_queen.png");
+        self.fill_scene_piece(self.board.kb, "black_king.png");
     }
 
-    fn fill_scene_piece(&mut self, mut bitboard: u64, tex_name: &str, gui: &Gui) {
-        let tex = gui.resource_manager.get_texture(tex_name);
+    fn fill_scene_piece(&mut self, mut bitboard: u64, tex_name: &str) {
+
+        let tex = RESOURCE_MANAGER.with_borrow(|r| r.get_texture(tex_name));
         while bitboard != 0 {
             let index = bitboard::pop(&mut bitboard);
             let mut sprite = Sprite::from_texture(tex.clone());
