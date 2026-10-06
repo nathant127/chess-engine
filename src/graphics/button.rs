@@ -46,7 +46,7 @@ impl Button {
 }
 
 impl GraphicsObject for Button {
-    fn render(&mut self, e: &Event, _state: &State, gui: &mut Gui) {
+    fn render(&mut self, e: &Event, gui: &mut Gui) {
         let hovered = self.is_mouse_over_button(gui.cursor);
         let colour = if hovered { self.hover_colour } else { self.colour };
 
@@ -55,14 +55,14 @@ impl GraphicsObject for Button {
             rectangle(colour, self.rect, c.transform, g);
         });
 
-        self.text.render(e, _state, gui);
+        self.text.render(e, gui);
     }
 
-    fn on_click(&mut self, _button: &MouseButton, _state: &mut State, _gui: &Gui) {
+    fn on_click(&mut self, _button: &MouseButton, _gui: &Gui) {
 
     }
 
-    fn update(&mut self, _state: &mut State, _gui: &Gui) {
+    fn update(&mut self, _gui: &Gui) {
         
     }
 }

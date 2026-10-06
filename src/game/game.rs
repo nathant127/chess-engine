@@ -27,6 +27,11 @@ pub enum Player {
     Bot,
     RemotePlayer
 }
+impl Default for Player {
+    fn default() -> Self {
+        Player::LocalPlayer
+    }
+}
 
 impl std::fmt::Display for Player {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -284,7 +289,7 @@ impl ChessGame {
 
 
 impl GraphicsObject for ChessGame {
-    fn render(&mut self, e: &Event, state: &State, gui: &mut Gui) {
+    fn render(&mut self, e: &Event, gui: &mut Gui) {
         use graphics::*;
         let args = e.render_args().unwrap();
 
@@ -326,12 +331,12 @@ impl GraphicsObject for ChessGame {
             self.scene.draw(transform, g);
         });
 
-        self.exit_button.render(e, state, gui);
+        self.exit_button.render(e, gui);
     }
-    fn on_click(&mut self, _button: &MouseButton, state: &mut State, gui: &Gui) {
+    fn on_click(&mut self, _button: &MouseButton, gui: &Gui) {
 
         if self.exit_button.is_mouse_over_button(gui.cursor) {
-            state.next_scene = 0;
+            GAME_STATE.with_borrow_mut(|s| s.next_scene = 0);
         }
 
         // If we are in multiplayer, but not connected yet, dont let player touch board
@@ -373,7 +378,7 @@ impl GraphicsObject for ChessGame {
         
     }
 
-    fn update(&mut self, state: &mut State, _gui: &Gui) {
+    fn update(&mut self, _gui: &Gui) {
 
         
         // Handle multiplayer connection
@@ -387,11 +392,11 @@ impl GraphicsObject for ChessGame {
                 },
                 Message::Disconnected => {
                     self.in_game = false;
-                    state.next_scene = 0;
+                    GAME_STATE.with_borrow_mut(|s| s.next_scene = 0);
                 },
                 Message::EndMatch => {
                     self.in_game = false;
-                    state.next_scene = 0;
+                    GAME_STATE.with_borrow_mut(|s| s.next_scene = 0);
                 },
                 Message::StartGame(turn) => {
                     self.in_game = true;

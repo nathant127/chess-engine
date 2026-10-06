@@ -75,7 +75,7 @@ impl Text {
 }
 
 impl GraphicsObject for Text {
-    fn render(&mut self, e: &Event, _state: &State, gui: &mut Gui) {
+    fn render(&mut self, e: &Event, gui: &mut Gui) {
 
         
         let mut font = self.font_ptr.borrow_mut();
@@ -93,11 +93,11 @@ impl GraphicsObject for Text {
         });
     }
 
-    fn on_click(&mut self, _button: &MouseButton, _state: &mut State, _gui: &Gui) {
+    fn on_click(&mut self, _button: &MouseButton, _gui: &Gui) {
 
     }
 
-    fn update(&mut self, _state: &mut State, _gui: &Gui) {
+    fn update(&mut self, _gui: &Gui) {
         
     }
 }

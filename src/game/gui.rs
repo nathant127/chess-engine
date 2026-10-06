@@ -8,6 +8,8 @@ extern crate sprite;
 extern crate piston_window;
 extern crate uuid;
 
+use std::cell::RefCell;
+
 use piston_window::*;
 
 use opengl_graphics::OpenGL;
@@ -21,7 +23,7 @@ use crate::game::main_menu::MainMenu;
 use crate::graphics::graphics::*;
 use crate::graphics::resource_manager::RESOURCE_MANAGER;
 
-
+#[derive(Default)]
 pub struct State {
     pub current_scene: i64,
     pub next_scene: i64,
@@ -29,19 +31,15 @@ pub struct State {
     pub chosen_players: [Player; 2],
 }
 
-
-
-
-
+thread_local! {
+    pub static GAME_STATE: RefCell<State> = RefCell::new(State::default());
+}
 
 pub struct ChessGui {
-    state: State,
-
     gui: Gui,
 
     game: ChessGame,
     main_menu: MainMenu
-
 }
 
 const OPENGL: OpenGL = OpenGL::V3_2;
@@ -80,8 +78,6 @@ impl ChessGui {
         let game = ChessGame::new(Player::LocalPlayer, Player::LocalPlayer);
 
         let chess_gui = ChessGui { 
-            state: State {current_scene: 0, next_scene: 0, chosen_players: [Player::LocalPlayer, Player::LocalPlayer]},
-            
             gui: gui,
             
             game: game,
@@ -101,40 +97,45 @@ impl ChessGui {
         let args = e.render_args().unwrap();
         self.gui.window_size = args.window_size;
 
-        match self.state.current_scene {
-            0 => self.main_menu.render(e, &self.state, &mut self.gui),
-            1 => self.game.render(e, &self.state, &mut self.gui),
+        let cur_scene = GAME_STATE.with_borrow(|s| s.current_scene);
+        match cur_scene {
+            0 => self.main_menu.render(e, &mut self.gui),
+            1 => self.game.render(e, &mut self.gui),
             _ => {},
         }
         
     }
 
     fn on_click(&mut self, button: &MouseButton) {
-        match self.state.current_scene {
-            0 => self.main_menu.on_click(button, &mut self.state,  &self.gui),
-            1 => self.game.on_click(button, &mut self.state, &self.gui),
+        let cur_scene = GAME_STATE.with_borrow(|s| s.current_scene);
+        match cur_scene {
+            0 => self.main_menu.on_click(button, &self.gui),
+            1 => self.game.on_click(button, &self.gui),
             _ => {},
         }       
 
     }
 
     fn update(&mut self, _e: &Event) {
-        match self.state.current_scene {
-            0 => self.main_menu.update(&mut self.state,  &self.gui),
-            1 => self.game.update(&mut self.state, &self.gui),
+        let cur_scene = GAME_STATE.with_borrow(|s| s.current_scene);
+        match cur_scene {
+            0 => self.main_menu.update(&self.gui),
+            1 => self.game.update(&self.gui),
             _ => {},
         }    
     }
 
     fn handle_events(&mut self, e: &Event) {
+        GAME_STATE.with_borrow_mut(|state| {
+            if state.current_scene != state.next_scene {
+                if state.next_scene == 1 {
+                    self.game = ChessGame::new(state.chosen_players[0], state.chosen_players[1]);
+                }
 
-        if self.state.current_scene != self.state.next_scene {
-            if self.state.next_scene == 1 {
-                self.game = ChessGame::new(self.state.chosen_players[0], self.state.chosen_players[1]);
+                state.current_scene = state.next_scene;
             }
-
-            self.state.current_scene = self.state.next_scene;
-        }
+        });
+        
 
         if let Some(_args) = e.update_args() {
             self.update(&e);

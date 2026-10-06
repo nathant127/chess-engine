@@ -10,9 +10,9 @@ pub struct Gui {
 }
 
 pub trait GraphicsObject {
-    fn render(&mut self, e: &Event, state: &State, gui: &mut Gui);
-    fn on_click(&mut self, button: &MouseButton, state: &mut State, gui: &Gui);
-    fn update(&mut self, state: &mut State, gui: &Gui);
+    fn render(&mut self, e: &Event, gui: &mut Gui);
+    fn on_click(&mut self, button: &MouseButton, gui: &Gui);
+    fn update(&mut self, gui: &Gui);
 }
 
 

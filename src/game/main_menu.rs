@@ -4,7 +4,7 @@ use piston_window::*;
 use crate::graphics::graphics::GraphicsObject;
 use crate::graphics::button::Button;
 use crate::game::game::Player;
-use crate::game::gui::State;
+use crate::game::gui::{GAME_STATE, State};
 use crate::graphics::graphics::*;
 
 const BACKGROUND: [f32; 4] = [0.7, 0.5, 0.5, 1.0];
@@ -30,31 +30,37 @@ impl MainMenu {
 }
 
 impl GraphicsObject for MainMenu {
-    fn render(&mut self, e: &Event, state: &State, gui: &mut Gui) {
+    fn render(&mut self, e: &Event, gui: &mut Gui) {
         gui.window.draw_2d(e, |_c, g, _| {
             clear(BACKGROUND, g);
         });
-        self.play_local_button.render(e, state, gui);
-        self.play_bot_button.render(e, state, gui);
-        self.play_multi_button.render(e, state, gui);
+        self.play_local_button.render(e, gui);
+        self.play_bot_button.render(e, gui);
+        self.play_multi_button.render(e,  gui);
     }
-    fn on_click(&mut self, _button: &MouseButton, state: &mut State, gui: &Gui) {
+    fn on_click(&mut self, _button: &MouseButton, gui: &Gui) {
         if self.play_local_button.is_mouse_over_button(gui.cursor) {
-            state.next_scene = 1;
-            state.chosen_players = [Player::LocalPlayer, Player::LocalPlayer];
+            GAME_STATE.with_borrow_mut(|s| {
+                s.next_scene = 1;
+                s.chosen_players = [Player::LocalPlayer, Player::LocalPlayer];
+            });
         }
 
         if self.play_bot_button.is_mouse_over_button(gui.cursor) {
-            state.next_scene = 1;
-            state.chosen_players = [Player::LocalPlayer, Player::Bot];
+            GAME_STATE.with_borrow_mut(|s| {
+                s.next_scene = 1;
+                s.chosen_players = [Player::LocalPlayer, Player::Bot];
+            });
         }
 
         if self.play_multi_button.is_mouse_over_button(gui.cursor) {
-            state.next_scene = 1;
-            state.chosen_players = [Player::LocalPlayer, Player::RemotePlayer];
+            GAME_STATE.with_borrow_mut(|s| {
+                s.next_scene = 1;
+                s.chosen_players = [Player::LocalPlayer, Player::RemotePlayer];
+            });
         }
     }
-    fn update(&mut self, _state: &mut State, _gui: &Gui) {
+    fn update(&mut self, _gui: &Gui) {
 
     }
 }
