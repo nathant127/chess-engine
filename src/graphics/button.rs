@@ -1,17 +1,13 @@
-use crate::graphics::graphics::*;
+use crate::graphics::{graphics::*, text::Text};
 use piston::{Event, MouseButton};
 use crate::game::gui::State;
 use piston_window::*;
-
-use crate::graphics::resource_manager::RESOURCE_MANAGER;
 
 
 
 
 pub struct Button {
-    text: String,
-    pos: [f64; 2],
-    bounds: [f64; 2],
+    text: Text,
     colour: [f32; 4],
     hover_colour: [f32; 4],
 
@@ -21,24 +17,31 @@ pub struct Button {
 
 
 impl Button {
-    pub fn new(text: &str, centre: [f64; 2], side_len: [f64; 2], colour: [f32; 4], hover_colour: [f32; 4]) -> Button{
+    pub fn new(text: &str, top_left: [f64; 2], padding: [f64; 2], colour: [f32; 4], hover_colour: [f32; 4]) -> Button{
+
+        // let text_origin = [top_left[0] + padding[0], top_left[1] + padding[1]];
+        let text_origin = [top_left[0] + padding[0], top_left[1] + padding[1]];
+
+        let text = Text::new(text, text_origin, [1.0, 1.0, 1.0, 1.0], "Montserrat-VariableFont_wght.ttf", 24);
+
+        let text_box = text.get_text_box();
+
+        let (width, height) = (padding[0] * 2.0 + text_box[2], padding[1] * 2.0 + text_box[3]);
+
+
         let button = Button {
-            text: text.to_string(),
-            pos: centre,
-            bounds: [side_len[0] / 2.0, side_len[1] / 2.0],
+            text: text,
             colour: colour,
             hover_colour: hover_colour,
 
-            rect: graphics::rectangle::centered([centre[0], centre[1], side_len[0] / 2.0, side_len[1] / 2.0]),
+            rect: [top_left[0], top_left[1], width, height],
         };
 
         return button;
     }
 
     pub fn is_mouse_over_button(&self, cursor: [f64; 2]) -> bool {
-        let button_frame = [cursor[0] - self.pos[0], cursor[1] - self.pos[1]];
-        let is_inside_button = (button_frame[0].abs() < self.bounds[0]) && (button_frame[1].abs() < self.bounds[1]);
-        return is_inside_button;
+        is_inside_rect(self.rect, cursor)
     }
 }
 
@@ -47,34 +50,12 @@ impl GraphicsObject for Button {
         let hovered = self.is_mouse_over_button(gui.cursor);
         let colour = if hovered { self.hover_colour } else { self.colour };
 
-        let font_size: u32 = 24;
-        let text_colour = [1.0, 1.0, 1.0, 1.0];
 
-        let font_ptr = RESOURCE_MANAGER.with_borrow(|r| 
-            r.get_font("Montserrat-VariableFont_wght.ttf")
-        );
-        let mut font = font_ptr.borrow_mut();
-
-        gui.window.draw_2d(e, |c, g, device| {
+        gui.window.draw_2d(e, |c, g, _| {
             rectangle(colour, self.rect, c.transform, g);
-
-            // Measure the text so we can centre it horizontally
-            let width = font.width(font_size, &self.text).unwrap_or(0.0);
-
-            // Text is drawn with its *baseline* at the transform origin,
-            // so nudge down by roughly a third of the font size to centre vertically
-            let transform = c.transform.trans(
-                self.pos[0] - width / 2.0,
-                self.pos[1] + font_size as f64 / 3.0,
-            );
-            
-            text::Text::new_color(text_colour, font_size)
-                .draw(&self.text, &mut *font, &c.draw_state, transform, g)
-                .unwrap();
-
-            // Required: uploads the glyph textures to the GPU
-            font.factory.encoder.flush(device);
         });
+
+        self.text.render(e, _state, gui);
     }
 
     fn on_click(&mut self, _button: &MouseButton, _state: &mut State, _gui: &Gui) {

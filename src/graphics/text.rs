@@ -39,7 +39,7 @@ impl Text {
         };
         
         let height = top_extent + bottom_extent;
-        let origin = [top_left[0], top_left[1] + (top_extent - bottom_extent) / 2.0];
+        let origin = [top_left[0], top_left[1] + top_extent];
 
         
 
@@ -48,7 +48,7 @@ impl Text {
             origin: origin,
             colour: colour,
             font_size: font_size,
-            text_box: graphics::rectangle::rectangle_by_corners(top_left[0], top_left[1], top_left[0] + width, top_left[1] + height),
+            text_box: [top_left[0], top_left[1], width, height],
 
             font_ptr: font_ptr,
         };

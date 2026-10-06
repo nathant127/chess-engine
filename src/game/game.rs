@@ -84,7 +84,7 @@ impl ChessGame {
             selected_piece_square: None,
             squares: ChessGame::init_board_squares(),
 
-            exit_button: Button::new("X", [25.0, 25.0], [50.0, 50.0], [1.0, 0.0, 0.0, 1.0], [0.7, 0.0, 0.0, 1.0]),
+            exit_button: Button::new("X", [0.0, 0.0], [25.0, 25.0], [1.0, 0.0, 0.0, 1.0], [0.7, 0.0, 0.0, 1.0]),
 
             net_client: net_client,
         };

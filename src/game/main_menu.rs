@@ -19,9 +19,9 @@ impl MainMenu {
         const COLOUR: [f32; 4] = [0.3,0.7,0.3,1.0];
         const HOVER_COLOUR: [f32; 4] = [0.3,0.5,0.3,1.0];
         let mm = MainMenu {
-            play_local_button: Button::new("Play Local", [80.0, 30.0], [150.0, 50.0], COLOUR, HOVER_COLOUR),
-            play_bot_button: Button::new("Play Bot", [80.0, 90.0], [150.0, 50.0], COLOUR, HOVER_COLOUR),
-            play_multi_button: Button::new("Play Multiplayer", [80.0, 150.0], [150.0, 50.0], COLOUR, HOVER_COLOUR),
+            play_local_button: Button::new("Play Local", [10.0, 10.0], [10.0, 10.0], COLOUR, HOVER_COLOUR),
+            play_bot_button: Button::new("Play Bot", [10.0, 100.0], [10.0, 10.0], COLOUR, HOVER_COLOUR),
+            play_multi_button: Button::new("Play Multiplayer", [10.0, 190.0], [10.0, 10.0], COLOUR, HOVER_COLOUR),
 
         };
 
