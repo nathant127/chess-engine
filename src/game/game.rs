@@ -335,11 +335,8 @@ impl GraphicsObject for ChessGame {
 
         self.exit_button.render(e, gui);
     }
-    fn on_click(&mut self, _button: &MouseButton, gui: &Gui) {
-
-        if self.exit_button.is_mouse_over_button(gui.cursor) {
-            GAME_STATE.with_borrow_mut(|s| s.next_scene = 0);
-        }
+    fn on_click(&mut self, button: &MouseButton, gui: &Gui) {
+        self.exit_button.on_click(button, gui);
 
         // If we are in multiplayer, but not connected yet, dont let player touch board
         if let Some(_) = self.net_client  {

@@ -38,8 +38,7 @@ thread_local! {
 pub struct ChessGui {
     gui: Gui,
 
-    game: ChessGame,
-    main_menu: MainMenu
+    scenes: Vec<Box<dyn GraphicsObject>>,
 }
 
 const OPENGL: OpenGL = OpenGL::V3_2;
@@ -75,13 +74,15 @@ impl ChessGui {
             }
         );
         
-        let game = ChessGame::new(Player::LocalPlayer, Player::LocalPlayer);
+        let scenes: Vec<Box<dyn GraphicsObject>> = vec![
+            Box::new(MainMenu::new()),
+            Box::new(ChessGame::new(Player::LocalPlayer, Player::LocalPlayer)),
+        ];
 
         let chess_gui = ChessGui { 
             gui: gui,
-            
-            game: game,
-            main_menu: MainMenu::new(),
+
+            scenes: scenes,
         };
 
         return chess_gui;
@@ -98,38 +99,25 @@ impl ChessGui {
         self.gui.window_size = args.window_size;
 
         let cur_scene = GAME_STATE.with_borrow(|s| s.current_scene);
-        match cur_scene {
-            0 => self.main_menu.render(e, &mut self.gui),
-            1 => self.game.render(e, &mut self.gui),
-            _ => {},
-        }
-        
+        self.scenes[cur_scene as usize].as_mut().render(e, &mut self.gui);        
     }
 
     fn on_click(&mut self, button: &MouseButton) {
         let cur_scene = GAME_STATE.with_borrow(|s| s.current_scene);
-        match cur_scene {
-            0 => self.main_menu.on_click(button, &self.gui),
-            1 => self.game.on_click(button, &self.gui),
-            _ => {},
-        }       
+        self.scenes[cur_scene as usize].as_mut().on_click(button, &self.gui);           
 
     }
 
     fn update(&mut self, _e: &Event) {
         let cur_scene = GAME_STATE.with_borrow(|s| s.current_scene);
-        match cur_scene {
-            0 => self.main_menu.update(&self.gui),
-            1 => self.game.update(&self.gui),
-            _ => {},
-        }    
+        self.scenes[cur_scene as usize].as_mut().update(&mut self.gui);
     }
 
     fn handle_events(&mut self, e: &Event) {
         GAME_STATE.with_borrow_mut(|state| {
             if state.current_scene != state.next_scene {
                 if state.next_scene == 1 {
-                    self.game = ChessGame::new(state.chosen_players[0], state.chosen_players[1]);
+                    self.scenes[1] = Box::new(ChessGame::new(state.chosen_players[0], state.chosen_players[1]));
                 }
 
                 state.current_scene = state.next_scene;
